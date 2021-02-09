@@ -1,24 +1,20 @@
 // Read JSON data from a local source and create
 // the necessary auxiliary variables inside cache.
 var cache = {};
-var getData = async function (url) {
-  // Start with organizeData()
-  let response = await fetch(`${url}/location_data.json`);
-  let resolve = await response.json();
-  organizeData(resolve);
-
-  // Now amend the proper lat/lon coordinates and some
-  // additional miscellanious info for all sediment cores.
-  response = await fetch(`${url}/location_info.txt`);
-  resolve = await response.text();
-  organizeInfo(resolve);
+var initialize = async function (url) {
+  await getData(`${url}/location_data.json`, 'json', organizeData);
+  await getData(`${url}/location_info.txt`, 'text', organizeInfo);
 
   console.log(cache);
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-  getData('data');
-}, false);
+// getData reads json and text data from a local source to
+// fill cache with the sediment core available information
+var getData = async function (url, methodFunc, callback) {
+  let response = await fetch(url);
+  let resolve = await response[methodFunc]();
+  callback(resolve);
+}
 
 // organizeData gets the available age and value axis pairs
 // from location_data.json for all sediment cores.
@@ -49,3 +45,8 @@ var organizeInfo = function (textIn) {
     }
   });
 };
+
+// On loading the DOM...
+document.addEventListener('DOMContentLoaded', function () {
+  initialize('data');
+}, false);
