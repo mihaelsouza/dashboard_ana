@@ -13,7 +13,7 @@ var getData = async function (url) {
   resolve = await response.text();
   organizeInfo(resolve);
 
-  //console.log(cache);
+  console.log(cache);
 }
 
 document.addEventListener('DOMContentLoaded', function () {

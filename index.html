@@ -15,7 +15,7 @@
 
     <!-- Scripts -->
     <script src="main.js"></script>
-    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="https://d3js.org/d3.v6.min.js" charset="utf-8"></script>
   </head>
 
   <body>
@@ -25,9 +25,19 @@
 
     <main>
       <div id='grid-container'>
-        <div id='map-canvas'>Map</div>
-        <div id='viz-canvas'>Graph</div>
-        <div id='info-canvas'>Info</div>
+        <div id='map-canvas'>
+          <svg id='map-svg'></svg>
+        </div>
+        <div id='viz-canvas'>
+          <div class='dropdown'>
+            <button class='dropdown-btn'>Choose your property... &#xbb</button>
+            <div class='dropdown-content'></div>
+          </div>
+          <svg id='graph-svg'></svg>
+        </div>
+        <div id='info-canvas'>
+          <h2>Information</h2>
+        </div>
       </div>
     </main>
   </body>
