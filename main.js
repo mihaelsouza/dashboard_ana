@@ -5,51 +5,174 @@ var initialize = async function (url) {
   await getData(`${url}/location_data.json`, 'json', organizeData);
   await getData(`${url}/location_info.txt`, 'text', organizeInfo);
 
-  plotMap();
+  plotMapCanvas();
 }
 
 // Create the initial map view
-var plotMap = function () {
-  let svg = d3.select('#map-svg');
-  let g = svg.append('g'); // General element, necessary to include zooming
+var plotMapCanvas = function () {
+  let canvas = d3.select('#map-svg');
+  let context = canvas.node().getContext('2d');
+  let width = d3.select('#map-canvas').node().getBoundingClientRect().width;
+  let sphere = {type: 'Sphere'};
+  let graticule = d3.geoGraticule();
+  let projection = d3.geoOrthographic()
+                      .rotate([0, -90])
+                      .precision(.1);
 
-  let boundingBox = d3.select('#map-canvas').node().getBoundingClientRect();
-  let width = boundingBox.width;
-  let height = boundingBox.height;
+  // Get height based on available width and projection
+  var getHeight = function () {
+    const [[x0, y0], [x1, y1]] = d3.geoPath(projection.fitWidth(width, sphere)).bounds(sphere);
+    const dy = Math.ceil(y1 - y0), l = Math.min(Math.ceil(x1 - x0), dy);
+    projection.scale(projection.scale() * (l - 1) / l).precision(0.2);
+    return dy;
+  };
+  let height = getHeight();
 
-  // Include zoom & pan functionality on map
-  const zoom = d3.zoom()
-                .scaleExtent([-1, 100])
-                .on('zoom', (event) => {
-                  svg.selectAll('path') // The zooming affects the state of the g element inside the svg
-                    .attr('transform', event.transform);
-                });
-  svg.call(zoom);
+  // Zoom function (copied exactly from https://observablehq.com/@d3/versor-zooming)
+  function zoom(projection, {
+    // Capture the projection’s original scale, before any zooming.
+    scale = projection._scale === undefined
+      ? (projection._scale = projection.scale())
+      : projection._scale,
+    scaleExtent = [-1, 10]
+  } = {}) {
+    let v0, q0, r0, a0, tl;
 
-  // Plot the map by reading the topojson file and appending the path
-  // generator to to the general element within svg.
-  d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json")
-    .then(function (topology) {
-      // We first need to create a geojson from the topojson we are loading in.
-      let geojson = topojson.feature(topology, topology.objects.countries)
+    const zoom = d3.zoom()
+        .scaleExtent(scaleExtent.map(x => x * scale))
+        .on('start', zoomstarted)
+        .on('zoom', zoomed);
 
-      let projection = d3.geoOrthographic()
-                    .rotate([0, -90])
-                    .fitSize([width, height], geojson)
-                    .precision(.1);
+    function point(event, that) {
+      const t = d3.pointers(event, that);
 
-      let path = d3.geoPath()
-                  .projection(projection);
+      if (t.length !== tl) {
+        tl = t.length;
+        if (tl > 1) a0 = Math.atan2(t[1][1] - t[0][1], t[1][0] - t[0][0]);
+        zoomstarted.call(that, event);
+      }
 
-      // Add the geojson features to the map SVG, using the path generator.
-      g.selectAll('path')
-        .data(geojson.features) // We only want the features from the geojson
-        .enter().append('path')
-        .attr('d', path)
-        .attr('fill', '#bdab56')
-        .call(zoom);
+      return tl > 1
+        ? [
+            d3.mean(t, p => p[0]),
+            d3.mean(t, p => p[1]),
+            Math.atan2(t[1][1] - t[0][1], t[1][0] - t[0][0])
+          ]
+        : t[0];
+    }
+
+    function zoomstarted(event) {
+      v0 = versor.cartesian(projection.invert(point(event, this)));
+      q0 = versor((r0 = projection.rotate()));
+    }
+
+    function zoomed(event) {
+      projection.scale(event.transform.k);
+      const pt = point(event, this);
+      const v1 = versor.cartesian(projection.rotate(r0).invert(pt));
+      const delta = versor.delta(v0, v1);
+      let q1 = versor.multiply(q0, delta);
+
+      // For multitouch, compose with a rotation around the axis.
+      if (pt[2]) {
+        const d = (pt[2] - a0) / 2;
+        const s = -Math.sin(d);
+        const c = Math.sign(Math.cos(d));
+        q1 = versor.multiply([Math.sqrt(1 - s * s), 0, 0, c * s], q1);
+      }
+
+      projection.rotate(versor.rotation(q1));
+
+      // In vicinity of the antipode (unstable) of q0, restart.
+      if (delta[0] < 0.7) zoomstarted.call(this, event);
+    }
+
+    return Object.assign(selection => selection
+        .property('__zoom', d3.zoomIdentity.scale(projection.scale()))
+        .call(zoom), {
+      on(type, ...options) {
+        return options.length
+            ? (zoom.on(type, ...options), this)
+            : zoom.on(type);
+      }
+    });
+  }
+
+  // Render the map on canvas
+  Promise.all([
+    d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'),
+    d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json'),
+  ]).then(([topology110, topology50]) => {
+    let land110 = topojson.feature(topology110, topology110.objects.countries)
+    let land50 = topojson.feature(topology50, topology50.objects.countries)
+    let grid = graticule();
+
+    function chart () {
+      const path = d3.geoPath(projection, context);
+
+      function render(land) {
+        context.clearRect(0, 0, width, height);
+        context.beginPath(), path(sphere), context.fillStyle = '#fff', context.fill();
+        context.beginPath(), path(grid), context.lineWidth = .5, context.strokeStyle = '#aaa', context.stroke();
+        context.beginPath(), path(land), context.fillStyle = '#000', context.fill();
+        context.beginPath(), path(sphere), context.stroke();
+      }
+
+      return canvas
+            .attr('width', width)
+            .attr('height', height)
+            .call(zoom(projection)
+            .on('zoom.render', () => render(land110))
+            .on('end.render', () => render(land50)))
+            .call(() => render(land50))
+            .node();
+    }
+
+    chart();
   });
 }
+
+// var plotMap = function () {
+//   let svg = d3.select('#map-svg');
+//   let g = svg.append('g'); // General element, necessary to include zooming
+
+//   let boundingBox = d3.select('#map-canvas').node().getBoundingClientRect();
+//   let width = boundingBox.width;
+//   let height = boundingBox.height;
+
+//   // Include zoom & pan functionality on map
+//   const zoom = d3.zoom()
+//                 .scaleExtent([-1, 100])
+//                 .on('zoom', (event) => {
+//                   svg.selectAll('path') // The zooming affects the state of the g element inside the svg
+//                     .attr('transform', event.transform);
+//                 });
+//   svg.call(zoom);
+
+//   // Plot the map by reading the topojson file and appending the path
+//   // generator to to the general element within svg.
+//   d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
+//     .then(function (topology) {
+//       // We first need to create a geojson from the topojson we are loading in.
+//       let geojson = topojson.feature(topology, topology.objects.countries)
+
+//       let projection = d3.geoOrthographic()
+//                     .rotate([0, -90])
+//                     .fitSize([width, height], geojson)
+//                     .precision(.1);
+
+//       let path = d3.geoPath()
+//                   .projection(projection);
+
+//       // Add the geojson features to the map SVG, using the path generator.
+//       g.selectAll('path')
+//         .data(geojson.features) // We only want the features from the geojson
+//         .enter().append('path')
+//         .attr('d', path)
+//         .attr('fill', '#bdab56')
+//         .call(zoom);
+//   });
+// }
 
 // getData reads json and text data from a local source to
 // fill cache with the sediment core available information
