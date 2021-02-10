@@ -42,13 +42,14 @@ p {
   grid-row: 1 / 5;
   height: 100%;
   width: 100%;
-  border: 1px solid #fff;
 }
 
 #map-svg {
   height: 100%;
   width: 100%;
   margin: 0;
+  background-color: rgba(24, 148, 197, .75);
+  border-radius: 5em;
 }
 
 #viz-canvas {
