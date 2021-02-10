@@ -6,45 +6,29 @@ var initialize = async function (url) {
   await getData(`${url}/location_info.txt`, 'text', organizeInfo);
 
   plotMap();
-  /*var url = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
-  var svg = d3.select('#map-svg');
-  d3.json(url, function(error, topology) {
-    if (error) throw error;
-
-    console.log("topojson", topology)
-    var geojson = topojson.feature(topology, topology.objects.countries);
-    console.log(geojson);
-
-    svg.selectAll('path')
-      .data(geojson.features)
-      .enter()
-      .append('path')
-      .attr('d', d3.geo.path());
-  });*/
 }
 
 // Create the initial map view
 var plotMap = function () {
   let svg = d3.select('#map-svg');
+  let g = svg.append('g'); // General element, necessary to include zooming
+
   let boundingBox = d3.select('#map-canvas').node().getBoundingClientRect();
   let width = boundingBox.width;
   let height = boundingBox.height;
 
-  // let long = d3.scaleLinear()
-  //             .domain([0, width])
-  //             .range([-180, 180]);
+  // Include zoom & pan functionality on map
+  const zoom = d3.zoom()
+                .scaleExtent([-1, 100])
+                .on('zoom', (event) => {
+                  svg.selectAll('path') // The zooming affects the state of the g element inside the svg
+                    .attr('transform', event.transform);
+                });
+  svg.call(zoom);
 
-  // let lat = d3.scaleLinear()
-  //             .domain([0, height])
-  //             .range([90, -90]);
-
-  // svg.on('mousemove', function() {
-  //   var p = d3.mouse(this);
-  //   projection.rotate([λ(p[0]), φ(p[1])]);
-  //   svg.selectAll('path').attr('d', path);
-  // });
-
-  d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
+  // Plot the map by reading the topojson file and appending the path
+  // generator to to the general element within svg.
+  d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json")
     .then(function (topology) {
       // We first need to create a geojson from the topojson we are loading in.
       let geojson = topojson.feature(topology, topology.objects.countries)
@@ -58,11 +42,13 @@ var plotMap = function () {
                   .projection(projection);
 
       // Add the geojson features to the map SVG, using the path generator.
-      svg.selectAll('path')
+      g.selectAll('path')
         .data(geojson.features) // We only want the features from the geojson
         .enter().append('path')
-        .attr('d', path);
-    });
+        .attr('d', path)
+        .attr('fill', '#bdab56')
+        .call(zoom);
+  });
 }
 
 // getData reads json and text data from a local source to
