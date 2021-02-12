@@ -19,6 +19,9 @@ var plotMapCanvas = function () {
                       .rotate([0, -90])
                       .precision(.1);
 
+  // Gather coordinates of available sediment cores to plot
+  var points = getLatLon(cache)
+
   // Get height based on available width and projection
   var getHeight = function () {
     const [[x0, y0], [x1, y1]] = d3.geoPath(projection.fitWidth(width, sphere)).bounds(sphere);
@@ -108,13 +111,17 @@ var plotMapCanvas = function () {
     let grid = graticule();
 
     function chart () {
-      const path = d3.geoPath(projection, context);
+      const path = d3.geoPath()
+                    .projection(projection)
+                    .context(context)
+                    .pointRadius(8);
 
       function render(land) {
         context.clearRect(0, 0, width, height);
         context.beginPath(), path(sphere), context.fillStyle = '#fff', context.fill();
         context.beginPath(), path(grid), context.lineWidth = .5, context.strokeStyle = '#aaa', context.stroke();
         context.beginPath(), path(land), context.fillStyle = '#000', context.fill();
+        context.beginPath(), path(points), context.fillStyle = 'red', context.fill(), context.border = 1;
         context.beginPath(), path(sphere), context.stroke();
       }
 
@@ -122,8 +129,8 @@ var plotMapCanvas = function () {
             .attr('width', width)
             .attr('height', height)
             .call(zoom(projection)
-            .on('zoom.render', () => render(land110))
-            .on('end.render', () => render(land50)))
+              .on('zoom.render', () => render(land110))
+              .on('end.render', () => render(land50)))
             .call(() => render(land50))
             .node();
     }
@@ -132,47 +139,21 @@ var plotMapCanvas = function () {
   });
 }
 
-// var plotMap = function () {
-//   let svg = d3.select('#map-svg');
-//   let g = svg.append('g'); // General element, necessary to include zooming
+// getLatLon creates a MultiPoint object with the longitude
+// and latitude coordinate pairs for each sediment core available
+var getLatLon = function (cache) {
+  let outerArray = [], id = [];
+  Object.entries(cache).forEach((arr) => {
+    id.push(arr[0]);
+    outerArray.push([arr[1].longitude, arr[1].latitude]);
+  });
 
-//   let boundingBox = d3.select('#map-canvas').node().getBoundingClientRect();
-//   let width = boundingBox.width;
-//   let height = boundingBox.height;
-
-//   // Include zoom & pan functionality on map
-//   const zoom = d3.zoom()
-//                 .scaleExtent([-1, 100])
-//                 .on('zoom', (event) => {
-//                   svg.selectAll('path') // The zooming affects the state of the g element inside the svg
-//                     .attr('transform', event.transform);
-//                 });
-//   svg.call(zoom);
-
-//   // Plot the map by reading the topojson file and appending the path
-//   // generator to to the general element within svg.
-//   d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
-//     .then(function (topology) {
-//       // We first need to create a geojson from the topojson we are loading in.
-//       let geojson = topojson.feature(topology, topology.objects.countries)
-
-//       let projection = d3.geoOrthographic()
-//                     .rotate([0, -90])
-//                     .fitSize([width, height], geojson)
-//                     .precision(.1);
-
-//       let path = d3.geoPath()
-//                   .projection(projection);
-
-//       // Add the geojson features to the map SVG, using the path generator.
-//       g.selectAll('path')
-//         .data(geojson.features) // We only want the features from the geojson
-//         .enter().append('path')
-//         .attr('d', path)
-//         .attr('fill', '#bdab56')
-//         .call(zoom);
-//   });
-// }
+  return {
+    id: id,
+    type: 'MultiPoint',
+    coordinates: outerArray
+  };
+};
 
 // getData reads json and text data from a local source to
 // fill cache with the sediment core available information
