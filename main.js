@@ -10,26 +10,51 @@ var initialize = async function (url) {
 
 // Create the initial map view
 var plotMapCanvas = function () {
-  let canvas = d3.select('#map-svg');
-  let context = canvas.node().getContext('2d');
-  let width = d3.select('#map-canvas').node().getBoundingClientRect().width;
+  let pointRadius = 8;
   let sphere = {type: 'Sphere'};
-  let graticule = d3.geoGraticule();
+  let width = d3.select('#map-canvas').node().getBoundingClientRect().width;
+  let height = d3.select('#map-canvas').node().getBoundingClientRect().height;
   let projection = d3.geoOrthographic()
                       .rotate([0, -90])
+                      .scale(width / 2.3)
+                      .translate([width / 2, height / 2])
                       .precision(.1);
+  let graticule = d3.geoGraticule()
+                    .step([10,10]);
+  let canvas = d3.select('#map-svg')
+                .attr('width', width)
+                .attr('height', height);
+  let context = canvas.node().getContext('2d');
 
   // Gather coordinates of available sediment cores to plot
-  var points = getLatLon(cache)
+  let pointsGeoCoords = getLatLon(cache);
 
-  // Get height based on available width and projection
-  var getHeight = function () {
-    const [[x0, y0], [x1, y1]] = d3.geoPath(projection.fitWidth(width, sphere)).bounds(sphere);
-    const dy = Math.ceil(y1 - y0), l = Math.min(Math.ceil(x1 - x0), dy);
-    projection.scale(projection.scale() * (l - 1) / l).precision(0.2);
-    return dy;
-  };
-  let height = getHeight();
+  // onClick event handler, for updating the canvas
+  canvas.on('click', (event) => {
+    let mouse = d3.pointer(event); // Clicked point
+
+    // Convert sediment core coordinates to map
+    // coordinates in current view/zoom
+    let pointsMapCoords = pointsGeoCoords.coordinates.map((el) => projection(el));
+
+    // Calculate distance between the click point and all
+    // available sediment core identifications in the canvas
+    let distanceMatrix = []
+    pointsMapCoords.forEach((el) => {
+      distanceMatrix.push(euclideanDistance(...mouse,...el));
+    });
+
+    // Registered selected sediment core with click distance
+    // and point distance is smaller than pointRadius
+    let clickedPoint = [];
+    pointsGeoCoords.id.filter((el,id) => {
+      if (distanceMatrix[id] <= pointRadius) {
+        clickedPoint.push([el, distanceMatrix[id]]);
+      }
+    });
+
+    if (clickedPoint.length >= 1) {populateDropdown(clickedPoint[0][0])}
+  });
 
   // Zoom function (copied exactly from https://observablehq.com/@d3/versor-zooming)
   function zoom(projection, {
@@ -37,7 +62,7 @@ var plotMapCanvas = function () {
     scale = projection._scale === undefined
       ? (projection._scale = projection.scale())
       : projection._scale,
-    scaleExtent = [-1, 10]
+    scaleExtent = [1, 100]
   } = {}) {
     let v0, q0, r0, a0, tl;
 
@@ -110,11 +135,11 @@ var plotMapCanvas = function () {
     let land50 = topojson.feature(topology50, topology50.objects.countries)
     let grid = graticule();
 
-    function chart () {
+    function chart (points) {
       const path = d3.geoPath()
                     .projection(projection)
                     .context(context)
-                    .pointRadius(8);
+                    .pointRadius(pointRadius);
 
       function render(land) {
         context.clearRect(0, 0, width, height);
@@ -126,8 +151,6 @@ var plotMapCanvas = function () {
       }
 
       return canvas
-            .attr('width', width)
-            .attr('height', height)
             .call(zoom(projection)
               .on('zoom.render', () => render(land110))
               .on('end.render', () => render(land50)))
@@ -135,7 +158,7 @@ var plotMapCanvas = function () {
             .node();
     }
 
-    chart();
+    chart(pointsGeoCoords);
   });
 }
 
@@ -191,6 +214,32 @@ var organizeInfo = function (textIn) {
       cache[id]['longitude'] = Number(lon);
     }
   });
+};
+
+// Populate the contents of the dropdown menu with the
+// available properties for the selected sediment core
+var populateDropdown = function (id) {
+  data = [];
+  Object.entries(cache[id]).forEach((el) => {
+    if (typeof el[1] === 'object' & el[1] !== null) {
+      data.push(el[0]);
+    }
+  });
+
+  d3.select('.dropdown-content')
+    .html('')
+    .selectAll('a')
+    .data(data).enter()
+    .append('a')
+      .attr('href', '#')
+      .append('text')
+        .text(el => String(el));
+};
+
+// Calculate the distance between two points in
+// an arbitrary two dimensional plane
+var euclideanDistance = function(x1,y1,x2,y2) {
+  return Math.sqrt((x2 - x1)**2 + (y2 - y1)**2);
 };
 
 // On loading the DOM...
