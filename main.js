@@ -12,8 +12,8 @@ var initialize = async function (url) {
 var plotMapCanvas = function () {
   let pointRadius = 8;
   let sphere = {type: 'Sphere'};
-  let width = d3.select('#map-canvas').node().getBoundingClientRect().width;
-  let height = d3.select('#map-canvas').node().getBoundingClientRect().height;
+  let width = d3.select('#map-container').node().getBoundingClientRect().width;
+  let height = d3.select('#map-container').node().getBoundingClientRect().height;
   let projection = d3.geoOrthographic()
                       .rotate([0, -90])
                       .scale(width / 2.3)
@@ -21,16 +21,12 @@ var plotMapCanvas = function () {
                       .precision(.1);
   let graticule = d3.geoGraticule()
                     .step([10,10]);
-  let canvas = d3.select('#map-svg')
+  let canvas = d3.select('#map-canvas')
                 .attr('width', width)
                 .attr('height', height);
   let context = canvas.node().getContext('2d');
 
-  // Gather coordinates of available sediment cores to plot
-  let pointsGeoCoords = getLatLon(cache);
-
-  // onClick event handler, for updating the canvas
-  canvas.on('click', (event) => {
+  function click(event) {
     let mouse = d3.pointer(event); // Clicked point
 
     // Convert sediment core coordinates to map
@@ -53,8 +49,11 @@ var plotMapCanvas = function () {
       }
     });
 
-    if (clickedPoint.length >= 1) {populateDropdown(clickedPoint[0][0])}
-  });
+    if (clickedPoint.length >= 1) {
+      //console.log(clickedPoint.length)
+      populateDropdown(clickedPoint[0][0])
+    }
+  };
 
   // Zoom function (copied exactly from https://observablehq.com/@d3/versor-zooming)
   function zoom(projection, {
@@ -160,6 +159,12 @@ var plotMapCanvas = function () {
 
     chart(pointsGeoCoords);
   });
+
+  // Gather coordinates of available sediment cores to plot
+  let pointsGeoCoords = getLatLon(cache);
+
+  // onClick event handler, for updating the canvas
+  canvas.on('click', (event) => click(event));
 }
 
 // getLatLon creates a MultiPoint object with the longitude
@@ -233,7 +238,13 @@ var populateDropdown = function (id) {
     .append('a')
       .attr('href', '#')
       .append('text')
-        .text(el => String(el));
+        .text(el => String(el))
+      .on('click', (val) => populateInfo(id, val.target.innerText));
+};
+
+// Populate information box
+var populateInfo = function (id, property) {
+
 };
 
 // Calculate the distance between two points in

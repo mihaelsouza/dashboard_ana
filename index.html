@@ -25,21 +25,20 @@
       <h1>Arctic (Sediment Cores)</h1>
     </header>
 
-    <main>
-      <div id='grid-container'>
-        <div id='map-canvas'>
-          <canvas id='map-svg'></canvas>
+    <main id='grid-container'>
+      <div id='map-container'>
+        <canvas id='map-canvas'></canvas>
+      </div>
+      <div id='viz-container'>
+        <div class='dropdown'>
+          <button class='dropdown-btn'>Choose your property... &#xbb</button>
+          <div class='dropdown-content'></div>
         </div>
-        <div id='viz-canvas'>
-          <div class='dropdown'>
-            <button class='dropdown-btn'>Choose your property... &#xbb</button>
-            <div class='dropdown-content'></div>
-          </div>
-          <svg id='graph-svg'></svg>
-        </div>
-        <div id='info-canvas'>
-          <h2>Information</h2>
-        </div>
+        <svg id='graph-svg'></svg>
+      </div>
+      <div id='info-container'>
+        <h2>Information</h2>
+        <div id='info-data'></div>
       </div>
     </main>
   </body>
