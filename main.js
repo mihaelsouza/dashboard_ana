@@ -211,7 +211,7 @@ var timeSeriesPlot = function (id, property) {
 
   // Scale variables to the SVG dimensions
   xScale = d3.scaleLinear()
-            .range([margins[3], width - margins[1]])
+            .range([margins[3], width - margins[1] - margins[3]])
             .domain(d3.extent(xvalues)).nice();
 
   yScale = d3.scaleLinear()
@@ -231,13 +231,15 @@ var timeSeriesPlot = function (id, property) {
 
   // Plot the time series
   let line = d3.line()
+              .curve(d3.curveStep)
+              .defined((d) => !isNaN(d[1]))
               .x(d => xScale(d[0]))
               .y(d => yScale(d[1]));
 
   svg.append('path')
     .datum(data)
     .attr('fill', 'none')
-    .attr('stroke', 'steelblue')
+    .attr('stroke', 'yellowgreen')
     .attr('stroke-width', 2)
     .attr('stroke-linejoin', 'round')
     .attr('stroke-linecap', 'round')

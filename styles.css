@@ -24,8 +24,7 @@ p {
   font-size: 1.2em;
   width: 100%;
   text-align: justify;
-  margin: 0 1em;
-  padding: .2em 0;
+  margin: 10px 100px;
 }
 
 #grid-container {
@@ -64,9 +63,9 @@ p {
 }
 
 #graph-svg {
-  height: 100%;
-  width: 100%;
-  margin: 2% 0 5% 5%;
+  height: inherit;
+  width: inherit;
+  margin: 10px 10px 20px 30px;
 }
 
 #info-container {
