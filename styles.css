@@ -61,13 +61,12 @@ p {
   grid-row: 1 / 4;
   height: 100%;
   width: 100%;
-  border: 1px solid #fff;
 }
 
 #graph-svg {
-  height: auto;
+  height: 100%;
   width: 100%;
-  margin: 0 2%;
+  margin: 2% 0 5% 5%;
 }
 
 #info-container {
@@ -76,6 +75,12 @@ p {
   grid-row: 4 / 5;
   height: 100%;
   width: 100%;
+}
+
+.centered-p {
+  text-align: center;
+  margin: 0;
+  padding: 0;
 }
 
 .dropdown {
@@ -111,7 +116,7 @@ p {
 }
 
 .dropdown:hover .dropdown-content {
-  display: inline-block;
+  display: inline-block !important;
 }
 
 .dropdown:hover .dropdown-btn {

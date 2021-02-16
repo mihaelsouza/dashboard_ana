@@ -8,7 +8,7 @@ var initialize = async function (url) {
   plotMapCanvas();
 }
 
-// Create the initial map view
+// Create the map view
 var plotMapCanvas = function () {
   // Data variables
   let land110, land50; // Variables to hold the topojson data
@@ -35,10 +35,20 @@ var plotMapCanvas = function () {
   // and populate the variable dropdown menu with available properties
   canvas.on('click', (event) => click(event));
   function click(event) {
-    let mouse = d3.pointer(event); // Clicked point
+    // Update tooltip in the information box
+    d3.select('#info-container')
+      .selectAll('p')
+      .remove();
+
+    d3.select('#info-container')
+      .append('p')
+      .attr('class', 'centered-p')
+      .append('text')
+        .text('Select a property in the dropdown menu above.');
 
     // Convert sediment core coordinates to map
     // coordinates in current view/zoom
+    let mouse = d3.pointer(event); // Clicked point
     let pointsMapCoords = pointsGeoCoords.coordinates.map((el) => projection(el));
 
     // Calculate distance between the click point and all
@@ -184,6 +194,56 @@ var plotMapCanvas = function () {
   });
 }
 
+// Create the SVG time series plot
+var timeSeriesPlot = function (id, property) {
+  let svg = d3.select('#graph-svg');
+  let width = +svg.style('width').replace('px','');
+  let height = +svg.style('height').replace('px','');
+  let margins = svg.style('margin').replaceAll('px','').split(' ').map((d) => +d);
+
+  // Organize the data for plotting
+  let xvalues = cache[id][property].age;
+  let yvalues = cache[id][property].values;
+  let data = []
+  xvalues.forEach((el,id) => {
+    data.push([el, yvalues[id]]);
+  });
+
+  // Scale variables to the SVG dimensions
+  xScale = d3.scaleLinear()
+            .range([margins[3], width - margins[1]])
+            .domain(d3.extent(xvalues)).nice();
+
+  yScale = d3.scaleLinear()
+            .range([height - margins[2], margins[0]])
+            .domain(d3.extent(yvalues)).nice();
+
+  svg.html('') // Clear current graphical content
+
+  // Create and draw the plot axes
+  svg.append('g')
+    .attr('transform', `translate(0,${height - margins[2]})`)
+    .call(d3.axisBottom(xScale));
+
+  svg.append('g')
+    .attr('transform', `translate(${margins[3]},0)`)
+    .call(d3.axisLeft(yScale));
+
+  // Plot the time series
+  let line = d3.line()
+              .x(d => xScale(d[0]))
+              .y(d => yScale(d[1]));
+
+  svg.append('path')
+    .datum(data)
+    .attr('fill', 'none')
+    .attr('stroke', 'steelblue')
+    .attr('stroke-width', 2)
+    .attr('stroke-linejoin', 'round')
+    .attr('stroke-linecap', 'round')
+    .attr('d', line);
+};
+
 // getLatLon creates a MultiPoint object with the longitude
 // and latitude coordinate pairs for each sediment core available
 var getLatLon = function (cache) {
@@ -254,9 +314,17 @@ var populateDropdown = function (id) {
     .data(data).enter()
     .append('a')
       .attr('href', '#')
-      .on('click', (val) => populateInfo(id, val.target.innerText))
+      .on('click', (val) => {
+        populateInfo(id, val.target.innerText)
+        timeSeriesPlot(id, val.target.innerText)
+        d3.select('.dropdown-content')
+          .style('display', 'none');
+      })
       .append('text')
         .text(el => String(el));
+
+  d3.select('.dropdown-content')
+    .style('display', 'inline-block');
 };
 
 // Populate information box
@@ -271,7 +339,7 @@ var populateInfo = function (id, property) {
     `<strong>ID:</strong> ${id}&emsp;<strong>Lake:</strong> ${lakeName}&emsp;<strong>Property:</strong> ${property}`,
     `<strong>Longitude:</strong> ${formatLongitude(longitude.toFixed(2))}&emsp;
      <strong>Latitude:</strong> ${formatLatitude(latitude.toFixed(2))}`,
-    `<strong>Date Range:</strong> ${d3.min(ageData)} until ${d3.max(ageData)}`,
+    `<strong>Date Range:</strong> from ${d3.min(ageData).toFixed(0)} until ${d3.max(ageData).toFixed(0)}`,
     `<strong>Min. Value:</strong> ${d3.min(valueData).toFixed(2)}<strong>&emsp;Max. Value:</strong> ${d3.max(valueData).toFixed(2)}`,
   ];
 
