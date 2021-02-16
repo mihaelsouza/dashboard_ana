@@ -10,10 +10,19 @@ var initialize = async function (url) {
 
 // Create the initial map view
 var plotMapCanvas = function () {
-  let pointRadius = 8;
-  let sphere = {type: 'Sphere'};
+  // Data variables
+  let land110, land50; // Variables to hold the topojson data
+  let pointsGeoCoords = getLatLon(cache); // Gather coordinates of sediment cores
+  let pointRadius = 8; // Define point radius for visualization and click recognition
+  let sphere = {type: 'Sphere'}; // Create sphere for canvas plotting
   let width = d3.select('#map-container').node().getBoundingClientRect().width;
   let height = d3.select('#map-container').node().getBoundingClientRect().height;
+
+  // D3 map variables
+  let canvas = d3.select('#map-canvas')
+                .attr('width', width)
+                .attr('height', height);
+  let context = canvas.node().getContext('2d');
   let projection = d3.geoOrthographic()
                       .rotate([0, -90])
                       .scale(width / 2.3)
@@ -21,11 +30,10 @@ var plotMapCanvas = function () {
                       .precision(.1);
   let graticule = d3.geoGraticule()
                     .step([10,10]);
-  let canvas = d3.select('#map-canvas')
-                .attr('width', width)
-                .attr('height', height);
-  let context = canvas.node().getContext('2d');
 
+  // Function to select a sediment core within the shown globe on click,
+  // and populate the variable dropdown menu with available properties
+  canvas.on('click', (event) => click(event));
   function click(event) {
     let mouse = d3.pointer(event); // Clicked point
 
@@ -40,8 +48,8 @@ var plotMapCanvas = function () {
       distanceMatrix.push(euclideanDistance(...mouse,...el));
     });
 
-    // Registered selected sediment core with click distance
-    // and point distance is smaller than pointRadius
+    // Register selected sediment core when click distance
+    // and point distance is smaller or equal than pointRadius
     let clickedPoint = [];
     pointsGeoCoords.id.filter((el,id) => {
       if (distanceMatrix[id] <= pointRadius) {
@@ -52,6 +60,9 @@ var plotMapCanvas = function () {
     if (clickedPoint.length >= 1) {
       //console.log(clickedPoint.length)
       populateDropdown(clickedPoint[0][0])
+
+      // Redraw chart to identified the selected sediment core
+      chart(land110, land50, pointsGeoCoords, clickedPoint[0][0]);
     }
   };
 
@@ -125,46 +136,52 @@ var plotMapCanvas = function () {
     });
   }
 
-  // Render the map on canvas
+  // Draw function to create a global map with the position of available data
+  function chart (landLowRes, landHighRes, points, selected = '') {
+    const grid = graticule();
+    const path = d3.geoPath()
+                  .projection(projection)
+                  .context(context)
+                  .pointRadius(pointRadius);
+
+    function render(land, selected) {
+      context.clearRect(0, 0, width, height);
+      context.beginPath(), path(sphere), context.fillStyle = '#fff', context.fill();
+      context.beginPath(), path(grid), context.lineWidth = .5, context.strokeStyle = '#aaa', context.stroke();
+      context.beginPath(), path(land), context.fillStyle = '#000', context.fill();
+      context.beginPath(), path(points), context.fillStyle = 'tomato', context.fill(), context.border = 1,
+                                         context.strokeStyle = 'red', context.stroke();
+      context.beginPath(), path(sphere), context.strokeStyle = '#000', context.stroke();
+      if (selected.length > 1) {
+        selected = {
+          coordinates: [cache[selected].longitude, cache[selected].latitude],
+          id: selected,
+          type: 'Point'
+        };
+
+        context.beginPath(), path(selected), context.fillStyle = 'gold', context.fill(), context.border = 1,
+                                             context.lineWidth = 1.5, context.strokeStyle = 'red', context.stroke();
+      }
+    }
+
+    return canvas
+          .call(zoom(projection)
+            .on('zoom.render', () => render(landLowRes, selected))
+            .on('end.render', () => render(landHighRes, selected)))
+          .call(() => render(landHighRes, selected))
+          .node();
+  }
+
+  // Load the topojson data to render the initial map
   Promise.all([
     d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'),
     d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json'),
   ]).then(([topology110, topology50]) => {
-    let land110 = topojson.feature(topology110, topology110.objects.countries)
-    let land50 = topojson.feature(topology50, topology50.objects.countries)
-    let grid = graticule();
+    land110 = topojson.feature(topology110, topology110.objects.countries)
+    land50 = topojson.feature(topology50, topology50.objects.countries)
 
-    function chart (points) {
-      const path = d3.geoPath()
-                    .projection(projection)
-                    .context(context)
-                    .pointRadius(pointRadius);
-
-      function render(land) {
-        context.clearRect(0, 0, width, height);
-        context.beginPath(), path(sphere), context.fillStyle = '#fff', context.fill();
-        context.beginPath(), path(grid), context.lineWidth = .5, context.strokeStyle = '#aaa', context.stroke();
-        context.beginPath(), path(land), context.fillStyle = '#000', context.fill();
-        context.beginPath(), path(points), context.fillStyle = 'red', context.fill(), context.border = 1;
-        context.beginPath(), path(sphere), context.stroke();
-      }
-
-      return canvas
-            .call(zoom(projection)
-              .on('zoom.render', () => render(land110))
-              .on('end.render', () => render(land50)))
-            .call(() => render(land50))
-            .node();
-    }
-
-    chart(pointsGeoCoords);
+    chart(land110, land50, pointsGeoCoords);
   });
-
-  // Gather coordinates of available sediment cores to plot
-  let pointsGeoCoords = getLatLon(cache);
-
-  // onClick event handler, for updating the canvas
-  canvas.on('click', (event) => click(event));
 }
 
 // getLatLon creates a MultiPoint object with the longitude
