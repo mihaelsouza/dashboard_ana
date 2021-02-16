@@ -237,14 +237,50 @@ var populateDropdown = function (id) {
     .data(data).enter()
     .append('a')
       .attr('href', '#')
+      .on('click', (val) => populateInfo(id, val.target.innerText))
       .append('text')
-        .text(el => String(el))
-      .on('click', (val) => populateInfo(id, val.target.innerText));
+        .text(el => String(el));
 };
 
 // Populate information box
 var populateInfo = function (id, property) {
+  let lakeName = cache[id].lake;
+  let longitude = cache[id].longitude;
+  let latitude = cache[id].latitude;
+  let ageData = cache[id][property].age;
+  let valueData = cache[id][property].values;
 
+  var infoText = [
+    `<strong>ID:</strong> ${id}&emsp;<strong>Lake:</strong> ${lakeName}&emsp;<strong>Property:</strong> ${property}`,
+    `<strong>Longitude:</strong> ${formatLongitude(longitude.toFixed(2))}&emsp;
+     <strong>Latitude:</strong> ${formatLatitude(latitude.toFixed(2))}`,
+    `<strong>Date Range:</strong> ${d3.min(ageData)} until ${d3.max(ageData)}`,
+    `<strong>Min. Value:</strong> ${d3.min(valueData).toFixed(2)}<strong>&emsp;Max. Value:</strong> ${d3.max(valueData).toFixed(2)}`,
+  ];
+
+  // Start by removing any <p> tags inside the box
+  // to reset its content
+  d3.select('#info-container')
+    .selectAll('p')
+    .remove()
+
+  // Now, we add the new information
+  d3.select('#info-container')
+    .selectAll('p')
+    .remove()
+    .data(infoText).enter()
+    .append('p')
+      .html((val) => val);
+};
+
+// Pair of function to format latitude and longitude
+// with the hemispherical indication
+var formatLatitude = function (latitude) {
+  return latitude > 0 ? `${latitude} &degN` : `${-latitude} &degS`;
+};
+
+var formatLongitude = function (longitude) {
+  return longitude > 0 ? `${longitude} &degE` : `${-longitude} &degW`;
 };
 
 // Calculate the distance between two points in
