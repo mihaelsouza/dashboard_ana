@@ -6,6 +6,7 @@ var initialize = async function (url) {
   await getData(`${url}/location_info.txt`, 'text', organizeInfo);
 
   plotMapCanvas();
+  populateFilterBox();
 }
 
 // Create the map view
@@ -15,8 +16,8 @@ var plotMapCanvas = function () {
   let pointsGeoCoords = getLatLon(cache); // Gather coordinates of sediment cores
   let pointRadius = 8; // Define point radius for visualization and click recognition
   let sphere = {type: 'Sphere'}; // Create sphere for canvas plotting
-  let width = d3.select('#map-container').node().getBoundingClientRect().width;
-  let height = d3.select('#map-container').node().getBoundingClientRect().height;
+  let width = d3.select('#map-canvas').node().getBoundingClientRect().width;
+  let height = d3.select('#map-canvas').node().getBoundingClientRect().height;
 
   // D3 map variables
   let canvas = d3.select('#map-canvas')
@@ -306,13 +307,11 @@ var organizeInfo = function (textIn) {
 // Populate the contents of the dropdown menu with the
 // available properties for the selected sediment core
 var populateDropdown = function (id) {
-  data = [];
-  Object.entries(cache[id]).forEach((el) => {
-    if (typeof el[1] === 'object' & el[1] !== null) {
-      data.push(el[0]);
-    }
-  });
+  // Start by getting the properties available for this id
+  data = getProperties(cache[id]);
 
+  // Create an anchor element in the dropdown menu
+  // for each property found
   d3.select('.dropdown-content')
     .html('')
     .selectAll('a')
@@ -332,7 +331,8 @@ var populateDropdown = function (id) {
     .style('display', 'inline-block');
 };
 
-// Populate information box
+// Populate information box with some ancillary
+// data on the selected location
 var populateInfo = function (id, property) {
   let coreName = cache[id].name;
   let lakeName = cache[id].lake;
@@ -359,6 +359,41 @@ var populateInfo = function (id, property) {
     .data(infoText).enter()
     .append('p')
       .html((val) => val);
+};
+
+// Populate the filter panel below the canvas with a set of
+// checkboxes with the available properties for all locations
+var populateFilterBox = function () {
+  let availableProperties = [];
+  Object.entries(cache).forEach((values) => {
+    getProperties(values[1]).forEach((el) => {
+      availableProperties.includes(el) ? {} : availableProperties.push(el);
+    });
+  });
+
+  d3.select('#filter-options')
+    .selectAll('input')
+    .data(availableProperties.sort()).enter()
+    .append('label')
+      .attr('for', (d) => d)
+    .append('input')
+      .attr('type', 'checkbox')
+      .style('margin-left', '3%')
+      .attr('id', (d) => d)
+      .attr('onClick', 'resetView()');
+
+  d3.selectAll('#filter-options label')
+    .append('text')
+    .text((d) => d);
+};
+
+var getProperties = function (collection) {
+  let properties = [];
+  Object.entries(collection).forEach((el) => {
+    (typeof el[1] === 'object' & el[1] !== null) ? properties.push(el[0]) : {};
+  });
+
+  return properties;
 };
 
 // Reset view button on click action

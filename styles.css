@@ -67,10 +67,34 @@ p {
 
 #map-canvas {
   display: block;
-  height: 100%;
+  height: 90%;
   width: 100%;
   margin: 0;
   border-radius: 5em;
+}
+
+#filter-panel {
+  display: flex;
+  flex-direction: row;
+  font-size: 1.2em;
+  text-align: center;
+  height: 10%;
+  margin-top: 1%;
+  padding-top: 5px;
+  border-top: 2px #fff solid;
+  border-image: linear-gradient(to left, #333, #fff, #333) 10;
+}
+
+#filter-panel p {
+  font-size: 1em;
+  margin: 0;
+  width: fit-content;
+}
+
+#filter-options {
+  font-size: .8em;
+  justify-content: space-between;
+  margin: 0;
 }
 
 #viz-container {
