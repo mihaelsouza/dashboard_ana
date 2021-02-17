@@ -36,20 +36,6 @@ var plotMapCanvas = function () {
   // and populate the variable dropdown menu with available properties
   canvas.on('click', (event) => click(event));
   function click(event) {
-    // Update tooltip in the information box and enable property dropdown
-    d3.select('#info-container')
-      .selectAll('p')
-      .remove();
-
-    d3.select('#info-container')
-      .append('p')
-      .attr('class', 'centered-p')
-      .append('text')
-        .text('Select a property in the dropdown menu above.');
-
-    d3.select('.dropdown')
-      .style('display', 'inline-block');
-
     // Convert sediment core coordinates to map
     // coordinates in current view/zoom
     let mouse = d3.pointer(event); // Clicked point
@@ -72,8 +58,21 @@ var plotMapCanvas = function () {
     });
 
     if (clickedPoint.length >= 1) {
-      //console.log(clickedPoint.length)
       populateDropdown(clickedPoint[0][0])
+
+      // Update tooltip in the information box and enable property dropdown
+      d3.select('#info-data')
+        .selectAll('p')
+        .remove();
+
+      d3.select('#info-data')
+        .append('p')
+        .attr('class', 'centered-p')
+        .append('text')
+          .text('Select a property in the dropdown menu above.');
+
+      d3.select('.dropdown')
+        .style('display', 'inline-block');
 
       // Redraw chart to identified the selected sediment core
       chart(land110, land50, pointsGeoCoords, clickedPoint[0][0]);
@@ -350,12 +349,13 @@ var populateInfo = function (id, property) {
   ];
 
   // Start by removing any <p> tags inside the box to reset its content
-  clearInfoBox();
-
-  // Now, we add the new information
   d3.select('#info-container')
     .selectAll('p')
-    .remove()
+    .remove();
+
+  // Now, we add the new information
+  d3.select('#info-data')
+    .selectAll('p')
     .data(infoText).enter()
     .append('p')
       .html((val) => val);
@@ -406,10 +406,12 @@ function resetView () {
 // Clear function for the information box and
 // the visualization graphics panel
 var clearInfoBox = function () {
-  let infoBox = d3.select('#info-container');
+  d3.select('#info-container')
+    .selectAll('p')
+    .remove();
 
-  infoBox.selectAll('p').remove();
-  infoBox.append('p')
+  d3.select('#info-data')
+    .append('p')
     .attr('class', 'centered-p')
     .append('text')
       .text('Pan/zoom around the globe and click to select a location and explore the available properties at the selected site.');

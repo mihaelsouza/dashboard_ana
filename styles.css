@@ -97,11 +97,19 @@ p {
   margin: 0;
 }
 
+#info-container {
+  flex-direction: column;
+  grid-column: 2 / 3;
+  grid-row: 1 / 2;
+  height: 100%;
+  width: 100%;
+}
+
 #viz-container {
   display: flex;
   flex-direction: column;
   grid-column: 2 / 3;
-  grid-row: 1 / 4;
+  grid-row: 2 / 5;
   height: 100%;
   width: 100%;
 }
@@ -110,14 +118,6 @@ p {
   height: inherit;
   width: inherit;
   margin: 10px 10px 20px 30px;
-}
-
-#info-container {
-  flex-direction: column;
-  grid-column: 2 / 3;
-  grid-row: 4 / 5;
-  height: 100%;
-  width: 100%;
 }
 
 .centered-p {
