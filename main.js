@@ -5,9 +5,9 @@ var initialize = async function (url) {
   await getData(`${url}/location_data.json`, 'json', organizeData);
   await getData(`${url}/location_info.txt`, 'text', organizeInfo);
 
-  plotMapCanvas();
   populateFilterBox();
-}
+  plotMapCanvas();
+};
 
 // Create the map view
 var plotMapCanvas = function () {
@@ -195,7 +195,7 @@ var plotMapCanvas = function () {
 
     chart(land110, land50, pointsGeoCoords);
   });
-}
+};
 
 // Create the SVG time series plot
 var timeSeriesPlot = function (id, property) {
@@ -252,11 +252,32 @@ var timeSeriesPlot = function (id, property) {
 // getLatLon creates a MultiPoint object with the longitude
 // and latitude coordinate pairs for each sediment core available
 var getLatLon = function (cache) {
+  // First, we need to see whether any properties are being filtered. If
+  //  so, we only return a MultiPoint object that includes the selection.
+  let filteredProperty = [];
+  d3.selectAll('#filter-options input:checked')
+    .each((el) => filteredProperty.push(el));
+  if (filteredProperty.length === 0) {
+    // However, returns all properties if none are selected
+    d3.selectAll('#filter-options input')
+    .each((el) => filteredProperty.push(el));
+  }
+
+  // Now we build the MultiPoint object to draw over our map
   let outerArray = [], id = [];
-  Object.entries(cache).forEach((arr) => {
-    id.push(arr[0]);
-    outerArray.push([arr[1].longitude, arr[1].latitude]);
+  Object.entries(cache)
+    .filter((arr) => (arr[1].latitude !== undefined | arr[1].longitude !== undefined))
+    .forEach((arr) => {
+      if (filteredProperty.some((el) => arr[1].properties.includes(el))) {
+        id.push(arr[0]);
+        outerArray.push([arr[1].longitude, arr[1].latitude]);
+      }
   });
+
+  // Object.entries(cache).forEach((arr) => {
+  //   id.push(arr[0]);
+  //   outerArray.push([arr[1].longitude, arr[1].latitude]);
+  // });
 
   return {
     id: id,
@@ -271,6 +292,17 @@ var getData = async function (url, methodFunc, callback) {
   let response = await fetch(url);
   let resolve = await response[methodFunc]();
   callback(resolve);
+};
+
+// getProperty parses all attributes inside collection and
+// returns a list with its key if they are objects
+var getProperties = function (collection) {
+  let properties = [];
+  Object.entries(collection).forEach((el) => {
+    (typeof el[1] === 'object' & el[1] !== null) ? properties.push(el[0]) : {};
+  });
+
+  return properties;
 };
 
 // organizeData gets the available age and value axis pairs
@@ -299,22 +331,49 @@ var organizeInfo = function (textIn) {
       cache[id]['lake'] = lake;
       cache[id]['latitude'] = Number(lat);
       cache[id]['longitude'] = Number(lon);
+      cache[id]['properties'] = getProperties(cache[id]);
     }
   });
+};
+
+// Populate the filter panel below the canvas with a set of
+// checkboxes with the available properties for all locations
+var populateFilterBox = function () {
+  let availableProperties = [];
+  Object.entries(cache).forEach((values) => {
+    if (values[1].properties !== undefined) {
+      values[1].properties.forEach((el) => {
+        availableProperties.includes(el) ? {} : availableProperties.push(el);
+      });
+    }
+  });
+
+  d3.select('#filter-options')
+    .selectAll('input')
+    .data(availableProperties.sort()).enter()
+    .append('label')
+      .attr('for', (d) => d)
+    .append('input')
+      .attr('type', 'checkbox')
+      .style('margin-left', '3%')
+      .attr('id', (d) => d)
+      .attr('onClick', 'resetView()')
+      .property('checked', false);
+
+  d3.selectAll('#filter-options label')
+    .append('text')
+    .text((d) => d);
 };
 
 // Populate the contents of the dropdown menu with the
 // available properties for the selected sediment core
 var populateDropdown = function (id) {
-  // Start by getting the properties available for this id
-  data = getProperties(cache[id]);
-
   // Create an anchor element in the dropdown menu
   // for each property found
   d3.select('.dropdown-content')
     .html('')
     .selectAll('a')
-    .data(data).enter()
+    .data(cache[id].properties).enter()
     .append('a')
       .attr('href', '#')
       .on('click', (val) => {
@@ -359,41 +418,6 @@ var populateInfo = function (id, property) {
     .data(infoText).enter()
     .append('p')
       .html((val) => val);
-};
-
-// Populate the filter panel below the canvas with a set of
-// checkboxes with the available properties for all locations
-var populateFilterBox = function () {
-  let availableProperties = [];
-  Object.entries(cache).forEach((values) => {
-    getProperties(values[1]).forEach((el) => {
-      availableProperties.includes(el) ? {} : availableProperties.push(el);
-    });
-  });
-
-  d3.select('#filter-options')
-    .selectAll('input')
-    .data(availableProperties.sort()).enter()
-    .append('label')
-      .attr('for', (d) => d)
-    .append('input')
-      .attr('type', 'checkbox')
-      .style('margin-left', '3%')
-      .attr('id', (d) => d)
-      .attr('onClick', 'resetView()');
-
-  d3.selectAll('#filter-options label')
-    .append('text')
-    .text((d) => d);
-};
-
-var getProperties = function (collection) {
-  let properties = [];
-  Object.entries(collection).forEach((el) => {
-    (typeof el[1] === 'object' & el[1] !== null) ? properties.push(el[0]) : {};
-  });
-
-  return properties;
 };
 
 // Reset view button on click action
