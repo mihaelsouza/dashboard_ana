@@ -27,6 +27,7 @@
 
     <main id='grid-container'>
       <div id='map-container'>
+        <button id='reset-view' onclick="resetView()">Reset View</button>
         <canvas id='map-canvas'></canvas>
       </div>
       <div id='viz-container'>
@@ -41,7 +42,9 @@
       <div id='info-container'>
         <h2>Information</h2>
         <div id='info-data'>
-          <p class='centered-p'>You need to select a location and a property first!</p>
+          <p class='centered-p'>
+            Pan/zoom around the globe and click to select a location and explore the available properties at the selected site.
+          </p>
         </div>
       </div>
     </main>

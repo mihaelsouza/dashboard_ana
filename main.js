@@ -25,7 +25,7 @@ var plotMapCanvas = function () {
   let context = canvas.node().getContext('2d');
   let projection = d3.geoOrthographic()
                       .rotate([0, -90])
-                      .scale(width / 2.3)
+                      .scale(width / 1.5)
                       .translate([width / 2, height / 2])
                       .precision(.1);
   let graticule = d3.geoGraticule()
@@ -35,7 +35,7 @@ var plotMapCanvas = function () {
   // and populate the variable dropdown menu with available properties
   canvas.on('click', (event) => click(event));
   function click(event) {
-    // Update tooltip in the information box
+    // Update tooltip in the information box and enable property dropdown
     d3.select('#info-container')
       .selectAll('p')
       .remove();
@@ -45,6 +45,9 @@ var plotMapCanvas = function () {
       .attr('class', 'centered-p')
       .append('text')
         .text('Select a property in the dropdown menu above.');
+
+    d3.select('.dropdown')
+      .style('display', 'inline-block');
 
     // Convert sediment core coordinates to map
     // coordinates in current view/zoom
@@ -82,7 +85,7 @@ var plotMapCanvas = function () {
     scale = projection._scale === undefined
       ? (projection._scale = projection.scale())
       : projection._scale,
-    scaleExtent = [1, 100]
+    scaleExtent = [-1, 100]
   } = {}) {
     let v0, q0, r0, a0, tl;
 
@@ -331,6 +334,7 @@ var populateDropdown = function (id) {
 
 // Populate information box
 var populateInfo = function (id, property) {
+  let coreName = cache[id].name;
   let lakeName = cache[id].lake;
   let longitude = cache[id].longitude;
   let latitude = cache[id].latitude;
@@ -338,18 +342,15 @@ var populateInfo = function (id, property) {
   let valueData = cache[id][property].values;
 
   var infoText = [
-    `<strong>ID:</strong> ${id}&emsp;<strong>Lake:</strong> ${lakeName}&emsp;<strong>Property:</strong> ${property}`,
+    `<strong>ID:</strong> ${coreName}&emsp;<strong>Lake:</strong> ${lakeName}&emsp;<strong>Property:</strong> ${property}`,
     `<strong>Longitude:</strong> ${formatLongitude(longitude.toFixed(2))}&emsp;
      <strong>Latitude:</strong> ${formatLatitude(latitude.toFixed(2))}`,
-    `<strong>Date Range:</strong> from ${d3.min(ageData).toFixed(0)} until ${d3.max(ageData).toFixed(0)}`,
+    `<strong>Date Range:</strong> from ${d3.min(ageData).toFixed(0)} until ${d3.max(ageData).toFixed(0)} of the Current Era`,
     `<strong>Min. Value:</strong> ${d3.min(valueData).toFixed(2)}<strong>&emsp;Max. Value:</strong> ${d3.max(valueData).toFixed(2)}`,
   ];
 
-  // Start by removing any <p> tags inside the box
-  // to reset its content
-  d3.select('#info-container')
-    .selectAll('p')
-    .remove()
+  // Start by removing any <p> tags inside the box to reset its content
+  clearInfoBox();
 
   // Now, we add the new information
   d3.select('#info-container')
@@ -358,6 +359,36 @@ var populateInfo = function (id, property) {
     .data(infoText).enter()
     .append('p')
       .html((val) => val);
+};
+
+// Reset view button on click action
+function resetView () {
+  plotMapCanvas();
+  clearInfoBox();
+  clearVizBox();
+}
+
+// Clear function for the information box and
+// the visualization graphics panel
+var clearInfoBox = function () {
+  let infoBox = d3.select('#info-container');
+
+  infoBox.selectAll('p').remove();
+  infoBox.append('p')
+    .attr('class', 'centered-p')
+    .append('text')
+      .text('Pan/zoom around the globe and click to select a location and explore the available properties at the selected site.');
+};
+
+var clearVizBox = function () {
+  d3.select('dropdown-content')
+    .html('');
+
+  d3.select('.dropdown')
+    .style('display', 'none');
+
+  d3.select('#graph-svg')
+    .html('');
 };
 
 // Pair of function to format latitude and longitude

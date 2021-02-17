@@ -39,10 +39,30 @@ p {
 }
 
 #map-container {
+  display: flex;
+  flex-direction: column;
   grid-column: 1 / 2;
   grid-row: 1 / 5;
   height: 100%;
   width: 100%;
+}
+
+#reset-view {
+  position: fixed;
+  font-size: 1em;
+  font-weight: bold;
+  opacity: .75;
+  border-radius: 1em;
+  align-self: center;
+  color: #fff;
+  background-color: #000;
+  padding: 2px 5px;
+  cursor: pointer;
+  outline: none;
+}
+
+#reset-view:hover {
+  background-color: #555;
 }
 
 #map-canvas {
@@ -84,7 +104,7 @@ p {
 
 .dropdown {
   position: relative;
-  display: inline-block;
+  display: none;
 }
 
 .dropdown-btn {
