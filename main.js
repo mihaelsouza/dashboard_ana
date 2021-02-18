@@ -239,7 +239,6 @@ var timeSeriesPlot = function (id, property) {
 
   // Plot the time series
   let line = d3.line()
-              .curve(d3.curveStep)
               .defined((d) => !isNaN(d[1]))
               .x(d => xScale(d[0]))
               .y(d => yScale(d[1]));
@@ -252,6 +251,60 @@ var timeSeriesPlot = function (id, property) {
     .attr('stroke-linejoin', 'round')
     .attr('stroke-linecap', 'round')
     .attr('d', line);
+
+  // Create a tooltip above the plot to inspect date.value
+  // pair at pointer location
+  var tooltip = svg.append("g");
+
+  svg.on("touchmove mousemove", function(event) {
+    var [year, value] = getClosestToPointer(d3.pointer(event, this)[0]);
+
+    tooltip.attr("transform", `translate(${xScale(year)},${yScale(value)})`)
+          .call(callout, `${property} = ${value}\nYear = ${year}`);
+  });
+  svg.on("touchend mouseleave", () => tooltip.call(callout, null));
+
+  // Get ydata value based on the mouse position along the xAxis
+  // Our goal is to show only the actual data values available
+  function getClosestToPointer (mouseX) {
+    var year = xScale.invert(mouseX);
+    var yearId = d3.minIndex(xvalues.map((el) => Math.abs(el - year)));
+
+    return [xvalues[yearId], yvalues[yearId]];
+  };
+
+  // Taken more or less straight from https://observablehq.com/@d3/line-chart-with-tooltip
+  function callout (g, value) {
+    if (!value) return g.style("display", "none");
+
+    g.style("display", null)
+      .style("pointer-events", "none")
+      .style("font", ".6em sans-serif");
+
+    const path = g.selectAll("path")
+                  .data([null])
+                  .join("path")
+                    .style('opacity', .75)
+                    .attr("fill", "white")
+                    .attr("stroke", "black");
+
+    const text = g.selectAll("text")
+                  .data([null])
+                  .join("text")
+                  .call(text => text
+                    .selectAll("tspan")
+                    .data((value + "").split(/\n/))
+                    .join("tspan")
+                      .attr("x", 0)
+                      .attr("y", (d, i) => `${i * 1.1}em`)
+                      .style("font-weight", (_, i) => i ? null : "bold")
+                      .text(d => d));
+
+    const {x, y, width: w, height: h} = text.node().getBBox();
+
+    text.attr("transform", `translate(${-w / 2},${15 - y})`);
+    path.attr("d", `M${-w / 2 - 10},5H-5l5,-5l5,5H${w / 2 + 10}v${h + 20}h-${w + 20}z`);
+  };
 };
 
 // getLatLon creates a MultiPoint object with the longitude
