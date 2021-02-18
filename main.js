@@ -1,16 +1,20 @@
+// Global variables
+var cache = {}; // Global cache to hold the loaded data
+var selected = ''; // Global var to hold the selected location
+                  // Necessary when resizing the body
+
 // Read JSON data from a local source and create
 // the necessary auxiliary variables inside cache.
-var cache = {};
 var initialize = async function (url) {
   await getData(`${url}/location_data.json`, 'json', organizeData);
   await getData(`${url}/location_info.txt`, 'text', organizeInfo);
 
   populateFilterBox();
-  plotMapCanvas();
+  plotMapCanvas(window.selected);
 };
 
 // Create the map view
-var plotMapCanvas = function () {
+var plotMapCanvas = function (selected) {
   // Data variables
   let land110, land50; // Variables to hold the topojson data
   let pointsGeoCoords = getLatLon(cache); // Gather coordinates of sediment cores
@@ -58,7 +62,8 @@ var plotMapCanvas = function () {
     });
 
     if (clickedPoint.length >= 1) {
-      populateDropdown(clickedPoint[0][0])
+      window.selected = clickedPoint[0][0]; // Updates the selected variable
+      populateDropdown(window.selected);
 
       // Update tooltip in the information box and enable property dropdown
       d3.select('#info-data')
@@ -75,7 +80,7 @@ var plotMapCanvas = function () {
         .style('display', 'inline-block');
 
       // Redraw chart to identified the selected sediment core
-      chart(land110, land50, pointsGeoCoords, clickedPoint[0][0]);
+      chart(land110, land50, pointsGeoCoords, window.selected);
     }
   };
 
@@ -150,7 +155,7 @@ var plotMapCanvas = function () {
   }
 
   // Draw function to create a global map with the position of available data
-  function chart (landLowRes, landHighRes, points, selected = '') {
+  function chart (landLowRes, landHighRes, points, selected) {
     const grid = graticule();
     const path = d3.geoPath()
                   .projection(projection)
@@ -193,7 +198,7 @@ var plotMapCanvas = function () {
     land110 = topojson.feature(topology110, topology110.objects.countries)
     land50 = topojson.feature(topology50, topology50.objects.countries)
 
-    chart(land110, land50, pointsGeoCoords);
+    chart(land110, land50, pointsGeoCoords, selected);
   });
 };
 
@@ -422,7 +427,9 @@ var populateInfo = function (id, property) {
 
 // Reset view button on click action
 function resetView () {
-  plotMapCanvas();
+  window.selected = '';
+
+  plotMapCanvas(window.selected);
   clearInfoBox();
   clearVizBox();
 }
