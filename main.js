@@ -210,6 +210,7 @@ var timeSeriesPlot = function (id, property) {
   let margins = svg.style('margin').replaceAll('px','').split(' ').map((d) => +d);
 
   // Organize the data for plotting
+  let unit = cache[id][property].unit;
   let xvalues = cache[id][property].age;
   let yvalues = cache[id][property].values;
   let data = []
@@ -260,7 +261,7 @@ var timeSeriesPlot = function (id, property) {
     var [year, value] = getClosestToPointer(d3.pointer(event, this)[0]);
 
     tooltip.attr("transform", `translate(${xScale(year)},${yScale(value)})`)
-          .call(callout, `${property} = ${value}\nYear = ${year}`);
+          .call(callout, `${property} = ${value} ${unit}\nYear = ${year}`);
   });
   svg.on("touchend mouseleave", () => tooltip.call(callout, null));
 
@@ -373,6 +374,7 @@ var organizeData = function (dataIn) {
 
     cache[id][property]['age'] = dataIn[key].Age_CE;
     cache[id][property]['values'] = dataIn[key].Value;
+    cache[id][property]['unit'] = dataIn[key].Unit[0] === 'ppt' ? '\u2030' : cache[id][property]['unit'] = dataIn[key].Unit[0];
   }
 };
 
@@ -456,13 +458,15 @@ var populateInfo = function (id, property) {
   let latitude = cache[id].latitude;
   let ageData = cache[id][property].age;
   let valueData = cache[id][property].values;
+  let unit = cache[id][property].unit;
 
   var infoText = [
     `<strong>ID:</strong> ${coreName}&emsp;<strong>Lake:</strong> ${lakeName}&emsp;<strong>Property:</strong> ${property}`,
     `<strong>Longitude:</strong> ${formatLongitude(longitude.toFixed(2))}&emsp;
      <strong>Latitude:</strong> ${formatLatitude(latitude.toFixed(2))}`,
     `<strong>Date Range:</strong> from ${d3.min(ageData).toFixed(0)} until ${d3.max(ageData).toFixed(0)} of the Current Era`,
-    `<strong>Min. Value:</strong> ${d3.min(valueData).toFixed(2)}<strong>&emsp;Max. Value:</strong> ${d3.max(valueData).toFixed(2)}`,
+    `<strong>Min. Value:</strong> ${d3.min(valueData).toFixed(2)} ${unit}
+     <strong>&emsp;Max. Value:</strong> ${d3.max(valueData).toFixed(2)} ${unit}`,
   ];
 
   // Start by removing any <p> tags inside the box to reset its content
