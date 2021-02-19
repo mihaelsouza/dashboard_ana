@@ -11,6 +11,7 @@ var initialize = async function (url) {
 
   populateFilterBox();
   plotMapCanvas(window.selected);
+  populateAutocomplete(d3.select('#id-search'), cache.autocompleteList);
 };
 
 // Create the map view
@@ -54,16 +55,20 @@ var plotMapCanvas = function (selected) {
 
     // Register selected sediment core when click distance
     // and point distance is smaller or equal than pointRadius
-    let clickedPoint = [];
+    let clickedPoint = ['', 1000000];
     pointsGeoCoords.id.filter((el,id) => {
       if (distanceMatrix[id] <= pointRadius) {
-        clickedPoint.push([el, distanceMatrix[id]]);
+        distanceMatrix[id] < clickedPoint[1] ? clickedPoint = [el, distanceMatrix[id]] : {};
       }
     });
 
     if (clickedPoint.length >= 1) {
-      window.selected = clickedPoint[0][0]; // Updates the selected variable
+      window.selected = clickedPoint[0]; // Updates the selected variable
       populateDropdown(window.selected);
+      d3.select('#graph-svg').html('');
+
+      d3.select('#id-search')
+        .property('value', cache[window.selected].name);
 
       // Update tooltip in the information box and enable property dropdown
       d3.select('#info-data')
@@ -74,7 +79,7 @@ var plotMapCanvas = function (selected) {
         .append('p')
         .attr('class', 'centered-p')
         .append('text')
-          .text('Select a property in the dropdown menu above.');
+          .text('Select a property in the dropdown menu below.');
 
       d3.select('.dropdown')
         .style('display', 'inline-block');
@@ -155,14 +160,15 @@ var plotMapCanvas = function (selected) {
   }
 
   // Draw function to create a global map with the position of available data
-  function chart (landLowRes, landHighRes, points, selected) {
+  function chart (landLowRes, landHighRes, points) {
+    const rect = canvas.node().getBoundingClientRect();
     const grid = graticule();
     const path = d3.geoPath()
                   .projection(projection)
                   .context(context)
                   .pointRadius(pointRadius);
 
-    function render(land, selected) {
+    function render(land) {
       context.clearRect(0, 0, width, height);
       context.beginPath(), path(sphere), context.fillStyle = '#fff', context.fill();
       context.beginPath(), path(grid), context.lineWidth = .5, context.strokeStyle = '#aaa', context.stroke();
@@ -170,10 +176,18 @@ var plotMapCanvas = function (selected) {
       context.beginPath(), path(points), context.fillStyle = 'tomato', context.fill(), context.border = 1,
                                          context.strokeStyle = 'red', context.stroke();
       context.beginPath(), path(sphere), context.strokeStyle = '#000', context.stroke();
-      if (selected.length > 1) {
+
+      // Grab the coordinate of points based on their current screen position
+      points.coordinates.forEach((el,i) => {
+        [mapX, mapY] = projection(el);
+        cache[points.id[i]]['screenCoords'] = [mapX + rect.x, mapY + rect.y];
+      });
+
+      // If a location was selected, highlight it
+      if (window.selected.length > 1) {
         selected = {
-          coordinates: [cache[selected].longitude, cache[selected].latitude],
-          id: selected,
+          coordinates: [cache[window.selected].longitude, cache[window.selected].latitude],
+          id: window.selected,
           type: 'Point'
         };
 
@@ -186,7 +200,7 @@ var plotMapCanvas = function (selected) {
           .call(zoom(projection)
             .on('zoom.render', () => render(landLowRes, selected))
             .on('end.render', () => render(landHighRes, selected)))
-          .call(() => render(landHighRes, selected))
+          .call(() => render(landHighRes))
           .node();
   }
 
@@ -198,7 +212,7 @@ var plotMapCanvas = function (selected) {
     land110 = topojson.feature(topology110, topology110.objects.countries)
     land50 = topojson.feature(topology50, topology50.objects.countries)
 
-    chart(land110, land50, pointsGeoCoords, selected);
+    chart(land110, land50, pointsGeoCoords);
   });
 };
 
@@ -310,6 +324,7 @@ var timeSeriesPlot = function (id, property) {
 
 // getLatLon creates a MultiPoint object with the longitude
 // and latitude coordinate pairs for each sediment core available
+// It takes into account the selected filters
 var getLatLon = function (cache) {
   // First, we need to see whether any properties are being filtered. If
   //  so, we only return a MultiPoint object that includes the selection.
@@ -324,19 +339,17 @@ var getLatLon = function (cache) {
 
   // Now we build the MultiPoint object to draw over our map
   let outerArray = [], id = [];
+  cache['autocompleteList'] = {};
   Object.entries(cache)
     .filter((arr) => (arr[1].latitude !== undefined | arr[1].longitude !== undefined))
     .forEach((arr) => {
       if (filteredProperty.some((el) => arr[1].properties.includes(el))) {
         id.push(arr[0]);
         outerArray.push([arr[1].longitude, arr[1].latitude]);
+
+        cache.autocompleteList[arr[1].name] = arr[0];
       }
   });
-
-  // Object.entries(cache).forEach((arr) => {
-  //   id.push(arr[0]);
-  //   outerArray.push([arr[1].longitude, arr[1].latitude]);
-  // });
 
   return {
     id: id,
@@ -417,7 +430,10 @@ var populateFilterBox = function () {
       .attr('type', 'checkbox')
       .style('margin-left', '3%')
       .attr('id', (d) => d)
-      .attr('onClick', 'resetView()')
+      .on('click', (event) => {
+        resetView();
+        populateAutocomplete(d3.select('#id-search'), cache.autocompleteList);
+      })
       .property('checked', false);
 
   d3.selectAll('#filter-options label')
@@ -425,28 +441,77 @@ var populateFilterBox = function () {
     .text((d) => d);
 };
 
+// Populate autocomplete
+var populateAutocomplete = function (input, data) {
+  input.on('input', () => {
+    let value = input.property('value'); // Grab current content of the search box
+    let target = d3.select('.autocomplete')
+                  .select('.dropdown-content');
+    target.html(''); // Clear existing lists
+
+    if (!value) {return false;} // Avoid erros when the list empties
+
+    // Otherwise, loop over the possible names and shows a dropdown list
+    // with the available ids that match the current content of search box
+    matches = [];
+    Object.entries(data).forEach((el) => {
+      if (value.toUpperCase() === el[0].substr(0, value.length).toUpperCase()) {
+        matches.push(`<strong>${el[0].substr(0,value.length)}</strong>${el[0].substr(value.length)}`);
+      }
+    });
+
+    target.selectAll('a')
+          .data(matches).enter()
+          .append('a')
+            .attr('href', '#')
+            .on('click', (event) => {
+              let el = event.target.innerText;
+              let id = data[el];
+
+              // Create a custom mouse event to trigger the
+              // onClick behavior from canvas
+              d3.select('#map-canvas')
+                .node()
+                .dispatchEvent(new MouseEvent('click',
+                                              {clientX: cache[id].screenCoords[0],
+                                               clientY: cache[id].screenCoords[1]})
+                );
+
+              // Change the current input in the search box to
+              // reflect the selection and hide the autocomplete list
+              d3.select('#id-search')
+                .property('value', el);
+              target.style('display', 'none');
+            })
+            .html((el) => el);
+
+    target.style('display', 'block')
+          .style('background-color', '#fff')
+          .style('width', input.style('width'));
+  });
+};
+
 // Populate the contents of the dropdown menu with the
 // available properties for the selected sediment core
 var populateDropdown = function (id) {
-  // Create an anchor element in the dropdown menu
-  // for each property found
-  d3.select('.dropdown-content')
-    .html('')
-    .selectAll('a')
-    .data(cache[id].properties).enter()
-    .append('a')
-      .attr('href', '#')
-      .on('click', (val) => {
-        populateInfo(id, val.target.innerText)
-        timeSeriesPlot(id, val.target.innerText)
-        d3.select('.dropdown-content')
-          .style('display', 'none');
-      })
-      .append('text')
-        .text(el => String(el));
+  // Create an anchor element in the dropdown menu for each property found
+  let dropdown = d3.select('.dropdown')
+                  .select('.dropdown-content')
 
-  d3.select('.dropdown-content')
-    .style('display', 'inline-block');
+  dropdown.html('')
+          .selectAll('a')
+          .data(cache[id].properties).enter()
+          .append('a')
+            .attr('href', '#')
+            .on('click', (val) => {
+              populateInfo(id, val.target.innerText);
+              timeSeriesPlot(id, val.target.innerText);
+              dropdown.style('display', 'none');
+            })
+            .append('text')
+              .text(el => String(el));
+
+  dropdown.style('display', 'inline-block');
 };
 
 // Populate information box with some ancillary
@@ -485,6 +550,8 @@ var populateInfo = function (id, property) {
 // Reset view button on click action
 function resetView () {
   window.selected = '';
+  d3.select('#id-search')
+    .property('value', '');
 
   plotMapCanvas(window.selected);
   clearInfoBox();
@@ -506,7 +573,8 @@ var clearInfoBox = function () {
 };
 
 var clearVizBox = function () {
-  d3.select('dropdown-content')
+  d3.select('.dropdown')
+    .select('.dropdown-content')
     .html('');
 
   d3.select('.dropdown')

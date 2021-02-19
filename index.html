@@ -27,7 +27,7 @@
 
     <main id='grid-container'>
       <div id='map-container'>
-        <button id='reset-view' onclick="resetView()">Reset View</button>
+        <button id='reset-view' class='button' onclick="resetView()">Reset View</button>
         <canvas id='map-canvas'></canvas>
         <div id='filter-panel'>
           <p><strong>Show&nbsp;only:</strong></p>
@@ -36,6 +36,13 @@
       </div>
       <div id='info-container'>
         <h2>Information</h2>
+        <form id='search-form' autocomplete="off">
+          <div class='autocomplete'>
+            <input id='id-search' type='text' name='idSelect' placeholder="Select by id...">
+            <div class='dropdown-content'></div>
+          </div>
+          <input id='search-button' class='button' type='submit' value='Select'>
+        </form>
         <div id='info-data'>
           <p class='centered-p'>
             Pan/zoom around the globe and click to select a location and explore the available properties at the selected site.
