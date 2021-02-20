@@ -469,7 +469,6 @@ var populateAutocomplete = function (input, data) {
 
               plotMapCanvas(window.selected); // Redraw canvas
               updateStateAfterSelection(); // Update viz & info boxes
-
               target.style('display', 'none'); // Hide the autocomplete list
             })
             .html((el) => el);
