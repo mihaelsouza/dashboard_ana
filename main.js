@@ -558,7 +558,7 @@ var clearInfoBox = function () {
     .append('p')
     .attr('class', 'centered-p')
     .append('text')
-      .text('Pan/zoom around the globe and click to select a location and explore the available properties at the selected site.');
+      .text('Pan/zoom around the globe and click to select a location and explore the available properties at the selected site. Alternatively, use the search box to select a location based directly on its id.');
 };
 
 var clearVizBox = function () {
