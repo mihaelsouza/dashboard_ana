@@ -14,7 +14,8 @@ var initialize = async function (url) {
   populateAutocomplete(d3.select('#id-search'), cache.autocompleteList);
 };
 
-// Create the map view
+// Plot the map canvas with all the currently filtered
+// sediment cores available
 var plotMapCanvas = function (selected) {
   // Data variables
   let land110, land50; // Variables to hold the topojson data
@@ -64,28 +65,8 @@ var plotMapCanvas = function (selected) {
 
     if (clickedPoint.length >= 1) {
       window.selected = clickedPoint[0]; // Updates the selected variable
-      populateDropdown(window.selected);
-      d3.select('#graph-svg').html('');
-
-      d3.select('#id-search')
-        .property('value', cache[window.selected].name);
-
-      // Update tooltip in the information box and enable property dropdown
-      d3.select('#info-data')
-        .selectAll('p')
-        .remove();
-
-      d3.select('#info-data')
-        .append('p')
-        .attr('class', 'centered-p')
-        .append('text')
-          .text('Select a property in the dropdown menu below.');
-
-      d3.select('.dropdown')
-        .style('display', 'inline-block');
-
-      // Redraw chart to identified the selected sediment core
-      chart(land110, land50, pointsGeoCoords, window.selected);
+      updateStateAfterSelection(); // Updates the visualizaiton & info box
+      chart(land110, land50, pointsGeoCoords, window.selected); // Redraw canvas
     }
   };
 
@@ -177,12 +158,6 @@ var plotMapCanvas = function (selected) {
                                          context.strokeStyle = 'red', context.stroke();
       context.beginPath(), path(sphere), context.strokeStyle = '#000', context.stroke();
 
-      // Grab the coordinate of points based on their current screen position
-      points.coordinates.forEach((el,i) => {
-        [mapX, mapY] = projection(el);
-        cache[points.id[i]]['screenCoords'] = [mapX + rect.x, mapY + rect.y];
-      });
-
       // If a location was selected, highlight it
       if (window.selected.length > 1) {
         selected = {
@@ -214,6 +189,30 @@ var plotMapCanvas = function (selected) {
 
     chart(land110, land50, pointsGeoCoords);
   });
+};
+
+// Update the state of all responsive elements in the website
+// when a selection is made, either through clicking or text input
+var updateStateAfterSelection = function () {
+  populateDropdown(window.selected);
+  d3.select('#graph-svg').html('');
+
+  d3.select('#id-search')
+    .property('value', cache[window.selected].name);
+
+  // Update tooltip in the information box and enable property dropdown
+  d3.select('#info-data')
+    .selectAll('p')
+    .remove();
+
+  d3.select('#info-data')
+    .append('p')
+    .attr('class', 'centered-p')
+    .append('text')
+      .text('Select a property in the dropdown menu below.');
+
+  d3.select('.dropdown')
+    .style('display', 'inline-block');
 };
 
 // Create the SVG time series plot
@@ -466,22 +465,12 @@ var populateAutocomplete = function (input, data) {
             .attr('href', '#')
             .on('click', (event) => {
               let el = event.target.innerText;
-              let id = data[el];
+              window.selected = data[el]; // Updates selection
 
-              // Create a custom mouse event to trigger the
-              // onClick behavior from canvas
-              d3.select('#map-canvas')
-                .node()
-                .dispatchEvent(new MouseEvent('click',
-                                              {clientX: cache[id].screenCoords[0],
-                                               clientY: cache[id].screenCoords[1]})
-                );
+              plotMapCanvas(window.selected); // Redraw canvas
+              updateStateAfterSelection(); // Update viz & info boxes
 
-              // Change the current input in the search box to
-              // reflect the selection and hide the autocomplete list
-              d3.select('#id-search')
-                .property('value', el);
-              target.style('display', 'none');
+              target.style('display', 'none'); // Hide the autocomplete list
             })
             .html((el) => el);
 
