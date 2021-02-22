@@ -444,6 +444,12 @@ var populateFilterBox = function () {
 var populateAutocomplete = function (input, data) {
   var currentFocus;
 
+  function removeClass(HTMLlist) {
+    for (let child of HTMLlist) {
+      child.classList.remove('autocomplete-active');
+    }
+  }
+
   input.on('input', () => {
     let value = input.property('value'); // Grab current content of the search box
     let target = d3.select('.autocomplete')
@@ -474,6 +480,12 @@ var populateAutocomplete = function (input, data) {
               updateStateAfterSelection(); // Update viz & info boxes
               target.style('display', 'none'); // Hide the autocomplete list
             })
+            .on('mouseover', () => {
+              let childList = d3.select('.autocomplete')
+                      .select('.dropdown-content')
+                      .selectChildren()._groups[0];
+              removeClass(childList);
+            })
             .html((el) => el);
 
     target.style('display', 'block')
@@ -503,9 +515,7 @@ var populateAutocomplete = function (input, data) {
 
     if (currentFocus > -1) {
       // Remove the highlight class from all available children elements
-      for (let child of childList) {
-        child.classList.remove('autocomplete-active');
-      }
+      removeClass(childList);
 
       // Highlight element currently in focus
       childList[currentFocus].classList.add('autocomplete-active');
