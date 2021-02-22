@@ -442,6 +442,8 @@ var populateFilterBox = function () {
 
 // Populate autocomplete
 var populateAutocomplete = function (input, data) {
+  var currentFocus;
+
   input.on('input', () => {
     let value = input.property('value'); // Grab current content of the search box
     let target = d3.select('.autocomplete')
@@ -449,6 +451,7 @@ var populateAutocomplete = function (input, data) {
     target.html(''); // Clear existing lists
 
     if (!value) {return false;} // Avoid erros when the list empties
+    currentFocus = -1;
 
     // Otherwise, loop over the possible names and shows a dropdown list
     // with the available ids that match the current content of search box
@@ -475,7 +478,38 @@ var populateAutocomplete = function (input, data) {
 
     target.style('display', 'block')
           .style('background-color', '#fff')
-          .style('width', input.style('width'));
+          .style('width', input.style('width'))
+          .style('z-index', 99);
+  })
+  .on('keydown', (event) => {
+    let childList = d3.select('.autocomplete')
+                      .select('.dropdown-content')
+                      .selectChildren()._groups[0];
+    if (event.keyCode === 40) { // Arrow Down
+      currentFocus++;
+      currentFocus >= childList.length ? currentFocus = childList.length-1 : {};
+    } else if (event.keyCode === 38) { // Arrow Up
+      currentFocus--;
+      currentFocus < 0 ? currentFocus = 0 : {};
+    } else if (event.keyCode === 13) { // Enter key
+      event.preventDefault(); // Prevent form being submitted
+
+      // Simulate a mouse click on the selected ID
+      // If no option is selected first, does nothing
+      if (currentFocus > -1) {
+        childList[currentFocus].click();
+      }
+    }
+
+    if (currentFocus > -1) {
+      // Remove the highlight class from all available children elements
+      for (let child of childList) {
+        child.classList.remove('autocomplete-active');
+      }
+
+      // Highlight element currently in focus
+      childList[currentFocus].classList.add('autocomplete-active');
+    }
   });
 };
 

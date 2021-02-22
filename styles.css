@@ -167,6 +167,10 @@ p {
   display: inline-block;
 }
 
+.autocomplete-active {
+  background-color: rgb(54, 167, 69);
+}
+
 .button {
   cursor: pointer;
   outline: none;
