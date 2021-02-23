@@ -64,7 +64,7 @@ var plotMapCanvas = function (selected) {
       }
     });
 
-    if (clickedPoint.length >= 1) {
+    if (clickedPoint[0] !== '') {
       window.selected = clickedPoint[0]; // Updates the selected variable
       updateStateAfterSelection(); // Updates the visualizaiton & info box
       chart(land110, land50, pointsGeoCoords, window.selected); // Redraw canvas
