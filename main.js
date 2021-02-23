@@ -12,6 +12,7 @@ var initialize = async function (url) {
   populateFilterBox();
   plotMapCanvas(window.selected);
   populateAutocomplete(d3.select('#id-search'), cache.autocompleteList);
+  CountsByPropertyPlot();
 };
 
 // Plot the map canvas with all the currently filtered
@@ -215,6 +216,91 @@ var updateStateAfterSelection = function () {
     .style('display', 'inline-block');
 };
 
+// Create a plot at initialization/view reset that show the amount of
+// available sediment core data within each property found
+// Heavily edited from: https://observablehq.com/@d3/horizontal-bar-chart
+var CountsByPropertyPlot = function () {
+  // Start by creating a counts object for the occurence
+  // of each property, ordered alphabetically
+  let counts = {}, data = [];
+  for (let obj in cache) {
+    try {
+      cache[obj].properties.forEach((el) => {
+        el in counts ? counts[el]++ : counts[el] = 1;
+      });
+    } catch (error) {
+      error.name === 'TypeError' ? {} : console.error(error);
+    }
+  }
+
+  // Create data array to use for plotting
+  for (key in counts) {
+    data.push({name: key, value: counts[key]});
+  }
+
+  // Sort array alphabetically
+  data.sort((a,b) => {
+    return a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1;
+  });
+
+  // Create the necessary variables to start plotting the bars
+  let svg = d3.select('#graph-svg');
+  let width = +svg.style('width').replace('px','');
+  let height = +svg.style('height').replace('px','');
+  let margins = svg.style('margin').replaceAll('px','').split(' ').map((d) => +d);
+  svg.html('') // Clear current graphical contents, if any
+
+  let xScale = d3.scaleLinear()
+                .range([margins[3], width - margins[1] - margins[3]])
+                .domain([0, d3.max(data, (d) => d.value)]).nice();
+
+  let yScale = d3.scaleBand()
+                .rangeRound([margins[0], height - margins[2]])
+                .domain(d3.range(data.length))
+                .padding(0.1);
+
+  // Plot axes
+  svg.append('g')
+    .attr('transform', `translate(0,${margins[0]})`)
+    .call(d3.axisTop(xScale));
+
+  svg.append('g')
+    .attr('transform', `translate(${margins[3]},0)`)
+    .call(d3.axisLeft(yScale)
+            .tickFormat((tick) => data[tick].name)
+    );
+
+  // Plot the bars
+  svg.append('g')
+      .attr('fill', 'yellowgreen')
+    .selectAll('rect')
+    .data(data)
+    .join('rect')
+      .style('opacity', .75)
+      .attr('x', xScale(0.1))
+      .attr('y', (d, i) => yScale(i))
+      .attr('width', (d) => xScale(d.value) - xScale(0.1))
+      .attr('height', yScale.bandwidth());
+
+  // Label bars with their direct value
+  svg.append('g')
+      .attr('fill', 'white')
+      .attr('text-anchor', 'end')
+      .attr('font-size', '1em')
+      .attr('font-weight', 'bold')
+    .selectAll('text')
+    .data(data)
+    .join('text')
+      .attr('x', d => xScale(d.value))
+      .attr('y', (d, i) => yScale(i) + yScale.bandwidth() / 2)
+      .attr('dy', '0.35em')
+      .attr('dx', -4)
+      .text(d => `n = ${d.value}`)
+    .call(text => text.filter(d => d.value < 3) // short bars
+      .attr('dx', +4)
+      .attr('text-anchor', 'start'));
+};
+
 // Create the SVG time series plot
 var timeSeriesPlot = function (id, property) {
   let svg = d3.select('#graph-svg');
@@ -268,15 +354,15 @@ var timeSeriesPlot = function (id, property) {
 
   // Create a tooltip above the plot to inspect date.value
   // pair at pointer location
-  var tooltip = svg.append("g");
+  var tooltip = svg.append('g');
 
-  svg.on("touchmove mousemove", function(event) {
+  svg.on('touchmove mousemove', function(event) {
     var [year, value] = getClosestToPointer(d3.pointer(event, this)[0]);
 
-    tooltip.attr("transform", `translate(${xScale(year)},${yScale(value)})`)
+    tooltip.attr('transform', `translate(${xScale(year)},${yScale(value)})`)
           .call(callout, `${property} = ${value} ${unit}\nYear = ${year}`);
   });
-  svg.on("touchend mouseleave", () => tooltip.call(callout, null));
+  svg.on('touchend mouseleave', () => tooltip.call(callout, null));
 
   // Get ydata value based on the mouse position along the xAxis
   // Our goal is to show only the actual data values available
@@ -289,35 +375,35 @@ var timeSeriesPlot = function (id, property) {
 
   // Taken more or less straight from https://observablehq.com/@d3/line-chart-with-tooltip
   function callout (g, value) {
-    if (!value) return g.style("display", "none");
+    if (!value) return g.style('display', 'none');
 
-    g.style("display", null)
-      .style("pointer-events", "none")
-      .style("font", ".6em sans-serif");
+    g.style('display', null)
+      .style('pointer-events', 'none')
+      .style('font', '.6em sans-serif');
 
-    const path = g.selectAll("path")
+    const path = g.selectAll('path')
                   .data([null])
-                  .join("path")
+                  .join('path')
                     .style('opacity', .75)
-                    .attr("fill", "white")
-                    .attr("stroke", "black");
+                    .attr('fill', 'white')
+                    .attr('stroke', 'black');
 
-    const text = g.selectAll("text")
+    const text = g.selectAll('text')
                   .data([null])
-                  .join("text")
+                  .join('text')
                   .call(text => text
-                    .selectAll("tspan")
-                    .data((value + "").split(/\n/))
-                    .join("tspan")
-                      .attr("x", 0)
-                      .attr("y", (d, i) => `${i * 1.1}em`)
-                      .style("font-weight", (_, i) => i ? null : "bold")
+                    .selectAll('tspan')
+                    .data((value + '').split(/\n/))
+                    .join('tspan')
+                      .attr('x', 0)
+                      .attr('y', (d, i) => `${i * 1.1}em`)
+                      .style('font-weight', (_, i) => i ? null : 'bold')
                       .text(d => d));
 
     const {x, y, width: w, height: h} = text.node().getBBox();
 
-    text.attr("transform", `translate(${-w / 2},${15 - y})`);
-    path.attr("d", `M${-w / 2 - 10},5H-5l5,-5l5,5H${w / 2 + 10}v${h + 20}h-${w + 20}z`);
+    text.attr('transform', `translate(${-w / 2},${15 - y})`);
+    path.attr('d', `M${-w / 2 - 10},5H-5l5,-5l5,5H${w / 2 + 10}v${h + 20}h-${w + 20}z`);
   };
 };
 
@@ -388,6 +474,12 @@ var organizeData = function (dataIn) {
     cache[id][property]['values'] = dataIn[key].Value;
     cache[id][property]['unit'] = dataIn[key].Unit[0] === 'ppt' ? '\u2030' : cache[id][property]['unit'] = dataIn[key].Unit[0];
   }
+
+  // Create a properties object that hold a list of
+  // available properties by ID
+  for (id in cache) {
+    cache[id]['properties'] = getProperties(cache[id]);
+  }
 };
 
 // organizeInfo adds to each sediment core ID in the cache
@@ -403,7 +495,6 @@ var organizeInfo = function (textIn) {
       cache[id]['lake'] = lake;
       cache[id]['latitude'] = Number(lat);
       cache[id]['longitude'] = Number(lon);
-      cache[id]['properties'] = getProperties(cache[id]);
     }
   });
 };
@@ -420,9 +511,16 @@ var populateFilterBox = function () {
     }
   });
 
+  // Sort properties alphabetically
+  availableProperties.sort((a,b) => {
+    return a.toLowerCase() > b.toLowerCase() ? 1 : -1;
+  });
+
+  cache['properties'] = availableProperties; // Cache this list
+
   d3.select('#filter-options')
     .selectAll('input')
-    .data(availableProperties.sort()).enter()
+    .data(availableProperties).enter()
     .append('label')
       .attr('for', (d) => d)
     .append('input')
@@ -588,6 +686,7 @@ function resetView () {
   plotMapCanvas(window.selected);
   clearInfoBox();
   clearVizBox();
+  CountsByPropertyPlot();
 }
 
 // Clear function for the information box and
