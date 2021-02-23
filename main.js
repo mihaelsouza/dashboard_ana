@@ -13,6 +13,17 @@ var initialize = async function (url) {
   plotMapCanvas(window.selected);
   populateAutocomplete(d3.select('#id-search'), cache.autocompleteList);
   CountsByPropertyPlot();
+
+  // Create a catch all in the body to escape the
+  // autocomplete search box if clicking outside of it
+  d3.select('body')
+    .on('click', (event) => {
+      if (event.path[0] !== d3.select('#id-search')._groups[0][0]) {
+        d3.select('.autocomplete')
+          .select('.dropdown-content')
+          .style('display', 'none');
+      }
+  });
 };
 
 // Plot the map canvas with all the currently filtered
@@ -548,24 +559,31 @@ var populateAutocomplete = function (input, data) {
     }
   }
 
-  input.on('input', () => {
+  input.on('click', () => {
+    input.on('input')();
+  })
+  .on('input', () => {
     let value = input.property('value'); // Grab current content of the search box
     let target = d3.select('.autocomplete')
                   .select('.dropdown-content');
     target.html(''); // Clear existing lists
-
-    if (!value) {return false;} // Avoid erros when the list empties
     currentFocus = -1;
 
-    // Otherwise, loop over the possible names and shows a dropdown list
-    // with the available ids that match the current content of search box
     matches = [];
-    Object.entries(data).forEach((el) => {
-      if (value.toUpperCase() === el[0].substr(0, value.length).toUpperCase()) {
-        matches.push(`<strong>${el[0].substr(0,value.length)}</strong>${el[0].substr(value.length)}`);
-      }
-    });
+    if (!value) { // Avoid erros when the list empties
+      Object.entries(data).forEach((el) => matches.push(el[0]));
+      //return false;
+    } else {
+      // Otherwise, loop over the possible names and shows a dropdown list
+      // with the available ids that match the current content of search box
+      Object.entries(data).forEach((el) => {
+        if (value.toUpperCase() === el[0].substr(0, value.length).toUpperCase()) {
+          matches.push(`<strong>${el[0].substr(0,value.length)}</strong>${el[0].substr(value.length)}`);
+        }
+      });
+    }
 
+    // Fill the autocomplete form with the found matches
     target.selectAll('a')
           .data(matches).enter()
           .append('a')

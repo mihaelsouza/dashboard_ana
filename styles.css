@@ -160,6 +160,11 @@ p {
 /*******************/
 /***** Classes *****/
 /*******************/
+.allow-overflow {
+  max-height: 500px;
+  overflow: auto;
+}
+
 .autocomplete {
   width: 60%;
   align-self: center;
