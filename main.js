@@ -1,3 +1,5 @@
+'use strict';
+
 // Global variables
 var cache = {}; // Global cache to hold the loaded data
 var selected = ''; // Global var to hold the selected location
@@ -245,7 +247,7 @@ var CountsByPropertyPlot = function () {
   }
 
   // Create data array to use for plotting
-  for (key in counts) {
+  for (let key in counts) {
     data.push({name: key, value: counts[key]});
   }
 
@@ -329,13 +331,13 @@ var timeSeriesPlot = function (id, property) {
   });
 
   // Scale variables to the SVG dimensions
-  xScale = d3.scaleLinear()
-            .range([margins[3], width - margins[1] - margins[3]])
-            .domain(d3.extent(xvalues)).nice();
+  let xScale = d3.scaleLinear()
+                .range([margins[3], width - margins[1] - margins[3]])
+                .domain(d3.extent(xvalues)).nice();
 
-  yScale = d3.scaleLinear()
-            .range([height - margins[2], margins[0]])
-            .domain(d3.extent(yvalues)).nice();
+  let yScale = d3.scaleLinear()
+                .range([height - margins[2], margins[0]])
+                .domain(d3.extent(yvalues)).nice();
 
   svg.html('') // Clear current graphical content
 
@@ -476,7 +478,7 @@ var getProperties = function (collection) {
 // organizeData gets the available age and value axis pairs
 // from location_data.json for all sediment cores.
 var organizeData = function (dataIn) {
-  for (key in dataIn) {
+  for (let key in dataIn) {
     let [id, property] = key.split('_');
     id in cache ? {} : cache[id] = {};
     property in cache[id] ? {} : cache[id][property] = {};
@@ -488,7 +490,7 @@ var organizeData = function (dataIn) {
 
   // Create a properties object that hold a list of
   // available properties by ID
-  for (id in cache) {
+  for (let id in cache) {
     cache[id]['properties'] = getProperties(cache[id]);
   }
 };
@@ -569,7 +571,7 @@ var populateAutocomplete = function (input, data) {
     target.html(''); // Clear existing lists
     currentFocus = -1;
 
-    matches = [];
+    let matches = [];
     if (!value) { // Avoid erros when the list empties
       Object.entries(data).forEach((el) => matches.push(el[0]));
       //return false;
