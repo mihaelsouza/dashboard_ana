@@ -6,6 +6,7 @@ html {
 /*************************/
 /***** HTML Elements *****/
 /*************************/
+
 body {
   display: flex;
   flex-direction: column;
@@ -37,6 +38,7 @@ p {
 /**************/
 /**** IDs *****/
 /**************/
+
 #filter-panel {
   display: flex;
   flex-direction: row;
@@ -106,6 +108,15 @@ p {
   grid-row: 2 / 3;
 }
 
+#map-buttons {
+  width: max-content;
+  position: fixed;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  column-gap: 25px;
+}
+
 #map-canvas {
   display: block;
   height: 90%;
@@ -121,10 +132,11 @@ p {
   grid-row: 1 / 5;
   height: 100%;
   width: 100%;
+  align-items: center;
 }
 
 #reset-view {
-  position: fixed;
+  position: relative;
   font-size: 1em;
   font-weight: bold;
   opacity: .75;
@@ -226,4 +238,58 @@ p {
 
 .dropdown-content a:hover {
   background-color: rgb(173, 173, 173);
+}
+
+input:checked + .slider:before,
+input:checked + .slider .slider-text {
+  -webkit-transform: translateX(45%);
+  -ms-transform: translateX(45%);
+  transform: translateX(45%);
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: .75;
+  border-radius: 1em;
+  background-color: #000;
+  box-shadow: 0 0 5px  rgb(96, 221, 112);
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider-text {
+  font-size: 1em;
+  font-weight: bold;
+  text-align: center;
+  color: #000;
+}
+
+.slider:before,
+.slider .slider-text {
+  position: absolute;
+  content: '';
+  height: 25px;
+  width: 70px;
+  border-radius: 1em;
+  background-color: rgb(54, 167, 69);
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 100px;
+  height: 25px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
 }

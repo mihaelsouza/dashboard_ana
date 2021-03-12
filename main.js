@@ -7,9 +7,10 @@ var selected = ''; // Global var to hold the selected location
 
 // Read JSON data from a local source and create
 // the necessary auxiliary variables inside cache.
-var initialize = async function (url) {
-  await getData(`${url}/location_data.json`, 'json', organizeData);
-  await getData(`${url}/location_info.txt`, 'text', organizeInfo);
+var initialize = async function () {
+  const [jsonFile, textFile] = getDataSource();
+  await getData(`data/${jsonFile}`, 'json', organizeData);
+  await getData(`data/${textFile}`, 'text', organizeInfo);
 
   populateFilterBox();
   plotMapCanvas(window.selected);
@@ -309,7 +310,7 @@ var CountsByPropertyPlot = function () {
       .attr('dy', '0.35em')
       .attr('dx', -4)
       .text(d => `n = ${d.value}`)
-    .call(text => text.filter(d => d.value < 3) // short bars
+    .call(text => text.filter(d => d.value < 5) // short bars
       .attr('dx', +4)
       .attr('text-anchor', 'start'));
 };
@@ -454,6 +455,13 @@ var getLatLon = function (cache) {
     type: 'MultiPoint',
     coordinates: outerArray
   };
+};
+
+// Get the desired data source to fill the website information, based on the slider positon
+var getDataSource = function () {
+  const dataSource = d3.select('#data-source').property('checked');
+  if (dataSource) return ['output_2kyr.json', 'Lake_records_coordinates_2kyr_utf8.txt'];
+  else return ['output_Holocene.json', 'Lake_records_coordinates_Holocene_utf8.txt'];
 };
 
 // getData reads json and text data from a local source to
@@ -697,6 +705,23 @@ var populateInfo = function (id, property) {
       .html((val) => val);
 };
 
+// Change data source on slider click
+function changeDataSource () {
+  cache = {}; // Clear cache to fill with new data
+  const state = d3.select('#data-source').property('checked'); // Slider state
+
+  // Put the appropriate text label on the Slider
+  if (state) d3.select('.slider-text').text('<2kyr');
+  else d3.select('.slider-text').text('Holoc.');
+
+  // Clear content of filter box
+  d3.select('#filter-options').html('');
+  resetView();
+
+  // Populate the cache and reinitialize website status
+  initialize();
+}
+
 // Reset view button on click action
 function resetView () {
   window.selected = '';
@@ -753,5 +778,5 @@ var euclideanDistance = function(x1,y1,x2,y2) {
 
 // On loading the DOM...
 document.addEventListener('DOMContentLoaded', function () {
-  initialize('data');
+  initialize();
 }, false);

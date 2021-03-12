@@ -27,7 +27,15 @@
 
     <main id='grid-container'>
       <div id='map-container'>
-        <button id='reset-view' class='button' onclick='resetView()'>Reset View</button>
+        <div id='map-buttons'>
+          <label class='switch'>
+            <input id='data-source' type='checkbox' onclick='changeDataSource()'>
+            <span class='slider'>
+              <span class='slider-text'>Holoc.</span>
+            </span>
+          </label>
+          <button id='reset-view' class='button' onclick='resetView()'>Reset View</button>
+        </div>
         <canvas id='map-canvas'></canvas>
         <div id='filter-panel'>
           <p><strong>Show&nbsp;only:</strong></p>
