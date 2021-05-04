@@ -164,13 +164,27 @@ var plotMapCanvas = function (selected) {
                   .context(context)
                   .pointRadius(pointRadius);
 
+    const lakes = {id: [], coordinates: [], type: 'MultiPoint'};
+    const oceans = {id: [], coordinates: [], type: 'MultiPoint'};
+    points.source.forEach((source, index) => {
+      if (source === 'lakes') {
+        lakes.id.push(points.id[index])
+        lakes.coordinates.push(points.coordinates[index])
+      } else {
+        oceans.id.push(points.id[index])
+        oceans.coordinates.push(points.coordinates[index])
+      }
+    })
+
     function render(land) {
       context.clearRect(0, 0, width, height);
       context.beginPath(), path(sphere), context.fillStyle = '#fff', context.fill();
       context.beginPath(), path(grid), context.lineWidth = .5, context.strokeStyle = '#aaa', context.stroke();
       context.beginPath(), path(land), context.fillStyle = '#000', context.fill();
-      context.beginPath(), path(points), context.fillStyle = 'tomato', context.fill(), context.border = 1,
+      context.beginPath(), path(lakes), context.fillStyle = 'tomato', context.fill(), context.border = 1,
                                          context.strokeStyle = 'red', context.stroke();
+      context.beginPath(), path(oceans), context.fillStyle = 'steelblue', context.fill(), context.border = 1,
+                                         context.strokeStyle = 'blue', context.stroke();
       context.beginPath(), path(sphere), context.strokeStyle = '#000', context.stroke();
 
       // If a location was selected, highlight it
@@ -437,13 +451,14 @@ var getLatLon = function (cache) {
   }
 
   // Now we build the MultiPoint object to draw over our map
-  let outerArray = [], id = [];
+  let outerArray = [], id = [], source = [];
   cache['autocompleteList'] = {};
   Object.entries(cache)
     .filter((arr) => (arr[1].latitude !== undefined | arr[1].longitude !== undefined))
     .forEach((arr) => {
       if (filteredProperty.some((el) => arr[1].properties.includes(el))) {
         id.push(arr[0]);
+        source.push(arr[1].source);
         outerArray.push([arr[1].longitude, arr[1].latitude]);
 
         cache.autocompleteList[arr[1].name] = arr[0];
@@ -453,6 +468,7 @@ var getLatLon = function (cache) {
   return {
     id: id,
     type: 'MultiPoint',
+    source: source,
     coordinates: outerArray
   };
 };
@@ -493,7 +509,7 @@ var organizeData = function (dataIn) {
 
     cache[id][property]['age'] = dataIn[key].Age_CE;
     cache[id][property]['values'] = dataIn[key].Value;
-    cache[id][property]['unit'] = dataIn[key].Unit[0] === 'ppt' ? '\u2030' : cache[id][property]['unit'] = dataIn[key].Unit[0];
+    cache[id][property]['unit'] = dataIn[key].Unit[0] === 'ppt' ? '\u2030' : dataIn[key].Unit[0];
   }
 
   // Create a properties object that hold a list of
@@ -508,12 +524,13 @@ var organizeData = function (dataIn) {
 var organizeInfo = function (textIn) {
   let text = textIn.split('\n').slice(1,);
   text.forEach((e) => {
-    let [id, name, lake, lat, lon] = e.split('\t');
+    let [id, name, lake, lat, lon, source] = e.split('\t');
     id = `ID${String(id).padStart(2,0)}`;
 
     if (id in cache) {
       cache[id]['name'] = name;
       cache[id]['lake'] = lake;
+      cache[id]['source'] = source;
       cache[id]['latitude'] = Number(lat);
       cache[id]['longitude'] = Number(lon);
     }
