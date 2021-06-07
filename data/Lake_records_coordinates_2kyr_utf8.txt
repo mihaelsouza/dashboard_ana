@@ -1,6 +1,6 @@
 ID	Core	Lake	Latitude	Longitude	Location	Line
-02	HVT03-1	Hvítárvatn	64.64194	-19.84028	lakes	2
-03	HVT03-2	Hvítárvatn	64.64333	-19.84967	lakes	3
+02	HVT03_1	Hvítárvatn	64.64194	-19.84028	lakes	2
+03	HVT03_2	Hvítárvatn	64.64333	-19.84967	lakes	3
 04	HAK	Haukadalsvatn	65.05585	-21.62576	lakes	4
 06	dune	Dune	64.42000	-149.90000	lakes	6
 07	greyling	Greyling	61.40000	-145.70000	lakes	7
@@ -9,8 +9,8 @@ ID	Core	Lake	Latitude	Longitude	Location	Line
 11	WL_1	Waskey	59.87940	-159.20670	lakes	11
 19	jarburvatnet	Jarburvatnet	61.70000	6.76000	lakes	19
 21	KR02	KR02	71.34000	-113.78000	lakes	21
-27	LCL-1A-1N-1	Last Chance Lake	70.90900	-25.58500	lakes	27
-29	A-10/C-10	Burial Lake	68.43000	-159.17000	lakes	29
+27	LCL	Last Chance Lake	70.90900	-25.58500	lakes	27
+29	A10_C10	Burial Lake	68.43000	-159.17000	lakes	29
 30	05ITLSC	Itilliq Lake	69.99170	-67.11670	lakes	30
 31	AT1	AT1	66.96752	-53.40158	lakes	31
 32	AT4	AT4	66.96498	-53.49880	lakes	32
@@ -18,18 +18,18 @@ ID	Core	Lake	Latitude	Longitude	Location	Line
 34	SS1381	SS1381	67.01425	-51.11953	lakes	34
 38	19	Nautajärvi	61.80000	24.68333	lakes	38
 39	KL	Keche Lake	68.02000	-146.92000	lakes	39
-40	KU-10	Kurupa Lake	68.36370	-154.64960	lakes	40
+40	KU_10	Kurupa Lake	68.36370	-154.64960	lakes	40
 41	05CF8SC	CF8	70.55000	-68.95000	lakes	41
 42	DV09	DV09	75.57611	-89.31528	lakes	42
 44	igaliku	Igaliku	61.00000	-45.44861	lakes	44
 46	S41	S41	63.72794	-109.34361	lakes	46
 47	V57	V57	68.65700	-105.35700	lakes	47
-49	BONE10-1A	Bone Lake	70.88779	-22.26664	lakes	49
+49	BONE10_1A	Bone Lake	70.88779	-22.26664	lakes	49
 55	LSP	Lone Spruce Pond	60.00700	-159.14300	lakes	55
 56	Loon	Loon Lake	67.92927	-161.96694	lakes	56
-57	MC-2	Mica Lake	60.95000	-148.15000	lakes	57
+57	MC_2	Mica Lake	60.95000	-148.15000	lakes	57
 58	Nanerersarpik	Nanerersarpik Lake	66.91322	-37.14583	lakes	58
-60	NE-14	NE-14 Lake	68.67440	-149.62640	lakes	60
+60	NE_14	NE-14 Lake	68.67440	-149.62640	lakes	60
 62	Aspvatnet	Aspvatnet Lake	69.73000	19.98000	lakes	62
 63	MB01	MB01	69.80667	-112.07500	lakes	63
 64	SL06	SL06	69.58933	-91.89217	lakes	64
@@ -42,7 +42,7 @@ ID	Core	Lake	Latitude	Longitude	Location	Line
 76	SS16	SS16	67.51667	-50.76667	lakes	76
 77	SS49	SS49	67.43333	-53.06667	lakes	77
 78	SFL4	SFL4	67.08639	-50.28944	lakes	78
-79	Lz1104-1	Hjort Sø	76.43463	-18.76178	lakes	79
+79	Lz1104_1	Hjort Sø	76.43463	-18.76178	lakes	79
 82	PG1214	Raffles Sø	70.59500	-21.53500	lakes	82
 87	OTTRAT	Råtåsjøen	62.26666	9.83333	lakes	87
 90	PG1205	Basaltsø	72.72333	-22.46500	lakes	90
@@ -52,18 +52,39 @@ ID	Core	Lake	Latitude	Longitude	Location	Line
 106	Lz1103	Duck Lake	76.42080	-18.75000	lakes	106
 107	Lz1101	Melles Lake	76.12640	-18.61080	lakes	107
 123	OYKJA	Vestre Øykjamyrtørn	59.81667	6.00000	lakes	123
-144	PW03	PW03	73.11667	-96.68333	lakes	144
-146	SIL-04-01	Sunken Island Lake	60.59302	-150.88623	lakes	146
+146	SIL_04_01	Sunken Island Lake	60.59302	-150.88623	lakes	146
 148	ABBO	Abborrtjärnen	63.88333	14.45000	lakes	148
 150	GUNNARS	Over Gunnarsfjorden	71.03806	28.16907	lakes	150
-154	LYL-P1-14	Ymer	65.62290	-37.72410	lakes	154
+154	LYL_P1_14	Ymer	65.62290	-37.72410	lakes	154
 156	FlowerValley	Flower Valley Lake	65.61070	-37.69350	lakes	156
 157	Heimerdalsvatnet	Heimerdalsvatnet	68.29633	13.65633	lakes	157
 158	Kulusuk	Kulusuk	65.56000	-37.11000	lakes	158
 159	Sermilik	Lower Sermilik Lake	65.40000	-37.50000	lakes	159
 160	SKR	Skorarvatn	66.25627	-22.32213	lakes	160
 161	TRK	Tröllkonuvatn	66.14252	-22.05607	lakes	161
-1009	PS2641-4/5	Greenland Sea	73.15500	-19.48500	ocean	1009
-1019	PS93/025-1/2	Greenland Sea	80.48117	-8.48867	ocean	1019
-1033	ARC-4	Canadian Straits	69.16567	-100.69533	ocean	1033
-1023	MSM05/3_343310-5-1	Baffin Bay	68.64768	-53.82488	ocean	1023
+163	303b	303	66.43621	-38.25506	lakes	163
+164	309a	309	66.44247	-38.23270	lakes	164
+165	KHL	Qivitu Highlands	67.96030	-65.04450	lakes	165
+167	15_PLK_U3	Pers	63.80320	-51.19869	lakes	167
+170	Revvatnet	Revvatnet	77.02200	15.36800	lakes	170
+171	GJP_01_14	Gjøavatnet	79.76667	10.86250	lakes	171
+172	Co1109	Sisi 12	66.98208	-53.71817	lakes	172
+173	Co1111	Sisi 14	66.97977	-53.73342	lakes	173
+174	Co1112	Sisi 15	66.96200	-53.67583	lakes	174
+175	Kharinei	Kharinei	67.36281	62.75072	lakes	175
+176	AKJP_103	Austre Kjennsvatnet	66.30000	14.20000	lakes	176
+177	95_DON_03	Donard	66.66667	-61.78333	lakes	177
+178	02_CF_03	CF3	70.53333	-68.36667	lakes	178
+179	JVP1	Jodavannet	79.33830	16.01670	lakes	179
+184	CF3	CF3	70.51667	-68.36667	lakes	184
+186	PW03	PW03	73.11667	-96.68333	lakes	186
+188	Toskaljavri	Toskaljavri	69.20000	21.46667	lakes	188
+189	Tsuolbmajavri	Tsuolbmajavri	68.68333	22.08333	lakes	189
+192	Llet_Ti	Llet-Ti	66.51667	59.31667	lakes	192
+195	Saarikko	Saarikko	62.25000	27.66667	lakes	195
+196	SP02	SP02	68.55000	-83.29000	lakes	196
+1009	PS2641_4_5	Greenland Sea	73.15500	-19.48500	ocean	1009
+1019	PS93_025_1_2	Greenland Sea	80.48117	-8.48867	ocean	1019
+1023	MSM05_3_343310_5_1	Baffin Bay	68.64768	-53.82488	ocean	1023
+1033	ARC_4	Canadian Straits	69.16567	-100.69533	ocean	1033
+1039	MD99_2263	Denmark Strait	66.67900	-24.19600	ocean	1039
