@@ -83,6 +83,7 @@ ID	Core	Lake	Latitude	Longitude	Location	Line
 192	Llet_Ti	Llet-Ti	66.51667	59.31667	lakes	192
 195	Saarikko	Saarikko	62.25000	27.66667	lakes	195
 196	SP02	SP02	68.55000	-83.29000	lakes	196
+199	Bjarstrask	Bjärsträsk	57.31667	18.41667	lakes	199
 1009	PS2641_4_5	Greenland Sea	73.15500	-19.48500	ocean	1009
 1019	PS93_025_1_2	Greenland Sea	80.48117	-8.48867	ocean	1019
 1023	MSM05_3_343310_5_1	Baffin Bay	68.64768	-53.82488	ocean	1023
