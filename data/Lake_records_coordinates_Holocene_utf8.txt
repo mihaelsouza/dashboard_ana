@@ -144,11 +144,11 @@ ID	Core	Lake	Latitude	Longitude	Location	Line
 194	Kipojarvi	Kipojärvi	69.30000	27.53333	lakes	194
 195	Saarikko	Saarikko	62.25000	27.66667	lakes	195
 196	SP02	SP02	68.55000	-83.29000	lakes	196
-197	Tibetanus	Tibetanus	68.33333	18.70000	Fennoscandia	197
-198	Igelsjon	Igelsjön	58.46667	13.73333	Fennoscandia	198
-199	Bjarstrask	Bjärsträsk	57.31667	18.41667	Fennoscandia	199
-200	OBL	Olive-backed Lake	56.20117	158.85817	Russian Arctic	200
-201	FMP1	Femmilsjøen	79.80531	15.73076	North Atlantic and Iceland	201
+197	Tibetanus	Tibetanus	68.33333	18.70000	Fennoscandia	lakes	197
+198	Igelsjon	Igelsjön	58.46667	13.73333	Fennoscandia	lakes	198
+199	Bjarstrask	Bjärsträsk	57.31667	18.41667	Fennoscandia	lakes	199
+200	OBL	Olive-backed Lake	56.20117	158.85817	Russian Arctic	lakes	200
+201	FMP1	Femmilsjøen	79.80531	15.73076	North Atlantic and Iceland	lakes	201
 1005	SO201_2_12	Bering Sea	53.99266	162.37583	ocean	1005
 1006	SO201_2_77	Bering Sea	56.33033	170.69883	ocean	1006
 1007	BP00_07_07	Kara Sea	74.65760	81.14110	ocean	1007
